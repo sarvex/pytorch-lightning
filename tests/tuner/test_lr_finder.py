@@ -111,11 +111,7 @@ def test_trainer_arg_bool(tmpdir, use_hparams):
     )
 
     trainer.tune(model)
-    if use_hparams:
-        after_lr = model.hparams.learning_rate
-    else:
-        after_lr = model.learning_rate
-
+    after_lr = model.hparams.learning_rate if use_hparams else model.learning_rate
     assert before_lr != after_lr, \
         'Learning rate was not altered after running learning rate finder'
 
@@ -140,11 +136,7 @@ def test_trainer_arg_str(tmpdir, use_hparams):
     )
 
     trainer.tune(model)
-    if use_hparams:
-        after_lr = model.hparams.my_fancy_lr
-    else:
-        after_lr = model.my_fancy_lr
-
+    after_lr = model.hparams.my_fancy_lr if use_hparams else model.my_fancy_lr
     assert before_lr != after_lr, \
         'Learning rate was not altered after running learning rate finder'
 
@@ -307,7 +299,7 @@ def test_lr_candidates_between_min_and_max(tmpdir):
         num_training=3,
     )
     lr_candidates = lr_finder.results["lr"]
-    assert all([lr_min <= lr <= lr_max for lr in lr_candidates])
+    assert all(lr_min <= lr <= lr_max for lr in lr_candidates)
 
 
 def test_lr_finder_ends_before_num_training(tmpdir):

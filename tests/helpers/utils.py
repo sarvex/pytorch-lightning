@@ -27,9 +27,7 @@ from tests.base.model_template import EvalModelTemplate
 
 
 def get_default_logger(save_dir, version=None):
-    # set up logger object without actually saving logs
-    logger = TensorBoardLogger(save_dir, name='lightning_logs', version=version)
-    return logger
+    return TensorBoardLogger(save_dir, name='lightning_logs', version=version)
 
 
 def get_data_path(expt_logger, path_dir=None):
@@ -49,7 +47,7 @@ def get_data_path(expt_logger, path_dir=None):
             path_dir = expt_logger.save_dir
         else:
             path_dir = _TEMP_PATH
-    path_expt = os.path.join(path_dir, name, 'version_%s' % version)
+    path_expt = os.path.join(path_dir, name, f'version_{version}')
 
     # try if the new sub-folder exists, typical case for test-tube
     if not os.path.isdir(path_expt):
@@ -80,8 +78,7 @@ def set_random_master_port():
 
 
 def init_checkpoint_callback(logger):
-    checkpoint = ModelCheckpoint(dirpath=logger.save_dir)
-    return checkpoint
+    return ModelCheckpoint(dirpath=logger.save_dir)
 
 
 def pl_multi_process_test(func):
@@ -112,7 +109,7 @@ def pl_multi_process_test(func):
         proc.join()
 
         result = queue.get()
-        assert result == 1, 'expected 1, but returned %s' % result
+        assert result == 1, f'expected 1, but returned {result}'
 
     return wrapper
 

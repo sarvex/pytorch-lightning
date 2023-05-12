@@ -279,10 +279,7 @@ class CometLogger(LightningLoggerBase):
         if self._experiment is not None and self._experiment.project_name is not None:
             return self._experiment.project_name
 
-        if self._project_name is not None:
-            return self._project_name
-
-        return "comet-default"
+        return "comet-default" if self._project_name is None else self._project_name
 
     @property
     def version(self) -> str:

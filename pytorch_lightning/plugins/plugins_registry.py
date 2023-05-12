@@ -66,7 +66,7 @@ class _TrainingTypePluginsRegistry(UserDict):
             override : overrides the registered plugin, if True
             init_params: parameters to initialize the plugin
         """
-        if not (name is None or isinstance(name, str)):
+        if name is not None and not isinstance(name, str):
             raise TypeError(f'`name` must be a str, found {name}')
 
         if name in self and not override:
@@ -86,10 +86,7 @@ class _TrainingTypePluginsRegistry(UserDict):
             self[name] = data
             return plugin
 
-        if plugin is not None:
-            return do_register(plugin)
-
-        return do_register
+        return do_register(plugin) if plugin is not None else do_register
 
     def get(self, name: str, default: Optional[Any] = None) -> Any:
         """
@@ -119,7 +116,7 @@ class _TrainingTypePluginsRegistry(UserDict):
         return list(self.keys())
 
     def __str__(self) -> str:
-        return "Registered Plugins: {}".format(", ".join(self.keys()))
+        return f'Registered Plugins: {", ".join(self.keys())}'
 
 
 TrainingTypePluginsRegistry = _TrainingTypePluginsRegistry()
@@ -136,11 +133,11 @@ def is_register_plugins_overridden(plugin: type) -> bool:
     else:
         return False
 
-    if hasattr(plugin_attr, 'patch_loader_code'):
-        is_overridden = plugin_attr.patch_loader_code != str(super_attr.__code__)
-    else:
-        is_overridden = plugin_attr.__code__ is not super_attr.__code__
-    return is_overridden
+    return (
+        plugin_attr.patch_loader_code != str(super_attr.__code__)
+        if hasattr(plugin_attr, 'patch_loader_code')
+        else plugin_attr.__code__ is not super_attr.__code__
+    )
 
 
 def call_training_type_register_plugins(root: Path, base_module: str) -> None:

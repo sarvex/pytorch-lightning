@@ -44,10 +44,11 @@ class PredictionLoop(DataLoaderLoop):
         # case where user does:
         # return dl1, dl2
         dataloaders = self.dataloaders
-        length = len(dataloaders)
-        if len(dataloaders) > 0 and isinstance(dataloaders[0], (list, tuple)):
-            length = len(dataloaders[0])
-        return length
+        return (
+            len(dataloaders[0])
+            if len(dataloaders) > 0 and isinstance(dataloaders[0], (list, tuple))
+            else len(dataloaders)
+        )
 
     @property
     def max_batches(self) -> List[int]:

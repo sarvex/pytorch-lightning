@@ -46,7 +46,9 @@ def from_argparse_args(cls, args: Union[Namespace, ArgumentParser], **kwargs):
 
     # we only want to pass in valid Trainer args, the rest may be user specific
     valid_kwargs = inspect.signature(cls.__init__).parameters
-    trainer_kwargs = dict((name, params[name]) for name in valid_kwargs if name in params)
+    trainer_kwargs = {
+        name: params[name] for name in valid_kwargs if name in params
+    }
     trainer_kwargs.update(**kwargs)
 
     return cls(**trainer_kwargs)
@@ -97,7 +99,7 @@ def parse_env_variables(cls, template: str = "PL_%(cls_name)s_%(cls_argument)s")
     for arg_name, _, _ in cls_arg_defaults:
         env = template % {'cls_name': cls.__name__.upper(), 'cls_argument': arg_name.upper()}
         val = os.environ.get(env)
-        if not (val is None or val == ''):
+        if val is not None and val != '':
             # todo: specify the possible exception
             with suppress(Exception):
                 # converting to native types like int/float/bool
@@ -209,7 +211,7 @@ def add_argparse_args(
     for symbol in (cls, cls.__init__):
         args_and_types = get_init_arguments_and_types(symbol)
         args_and_types = [x for x in args_and_types if x[0] not in ignore_arg_names]
-        if len(args_and_types) > 0:
+        if args_and_types:
             break
 
     args_help = _parse_args_from_docstring(cls.__init__.__doc__ or cls.__doc__ or "")
@@ -235,7 +237,7 @@ def add_argparse_args(
         else:
             use_type = arg_types[0]
 
-        if arg == 'gpus' or arg == 'tpu_cores':
+        if arg in ['gpus', 'tpu_cores']:
             use_type = _gpus_allowed_type
 
         # hack for types in (int, float)
@@ -255,9 +257,7 @@ def add_argparse_args(
             **arg_kwargs,
         )
 
-    if use_argument_group:
-        return parent_parser
-    return parser
+    return parent_parser if use_argument_group else parser
 
 
 def _parse_args_from_docstring(docstring: str) -> Dict[str, str]:
@@ -284,9 +284,7 @@ def _parse_args_from_docstring(docstring: str) -> Dict[str, str]:
 
 
 def _gpus_allowed_type(x) -> Union[int, str]:
-    if ',' in x:
-        return str(x)
-    return int(x)
+    return str(x) if ',' in x else int(x)
 
 
 def _gpus_arg_default(x) -> Union[int, str]:  # pragma: no-cover
@@ -297,6 +295,4 @@ def _gpus_arg_default(x) -> Union[int, str]:  # pragma: no-cover
 
 
 def _int_or_float_type(x) -> Union[int, float]:
-    if '.' in str(x):
-        return float(x)
-    return int(x)
+    return float(x) if '.' in str(x) else int(x)

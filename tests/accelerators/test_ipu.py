@@ -66,27 +66,22 @@ class IPUClassificationModel(ClassificationModel):
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        loss = F.cross_entropy(logits, y)
-        return loss
+        return F.cross_entropy(logits, y)
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        acc = self.accuracy(logits, y)
-        return acc
+        return self.accuracy(logits, y)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        acc = self.accuracy(logits, y)
-        return acc
+        return self.accuracy(logits, y)
 
     def accuracy(self, logits, y):
-        # todo (sean): currently IPU poptorch doesn't implicit convert bools to tensor
-        # hence we use an explicit calculation for accuracy here. Once fixed in poptorch
-        # we can use the accuracy metric.
-        acc = torch.sum(torch.eq(torch.argmax(logits, -1), y).to(torch.float32)) / len(y)
-        return acc
+        return torch.sum(
+            torch.eq(torch.argmax(logits, -1), y).to(torch.float32)
+        ) / len(y)
 
     def validation_epoch_end(self, outputs) -> None:
         self.log('val_acc', torch.stack(outputs).mean())
@@ -340,7 +335,7 @@ def test_autoreport(tmpdir):
     )
     trainer.fit(model)
     assert os.path.exists(autoreport_path)
-    assert os.path.isfile(autoreport_path + 'profile.pop')
+    assert os.path.isfile(f'{autoreport_path}profile.pop')
 
 
 @RunIf(ipu=True)
@@ -448,13 +443,7 @@ def test_manual_poptorch_opts_train_grad_accum(tmpdir):
         accumulate_grad_batches=1,
         plugins=IPUPlugin(inference_opts=inference_opts, training_opts=training_opts)
     )
-    with pytest.warns(
-        UserWarning,
-        match=f"Training poptorch.Options set gradientAccumulation to {2}. "
-        f"This is different to accumulate_grad_batches which was set to {1}. "
-        f"To change gradientAccumulation, please set accumulate_grad_batches in the Trainer. "
-        f"Setting poptorch.Options gradientAccumulation to {1}",
-    ):
+    with pytest.warns(UserWarning, match='Training poptorch.Options set gradientAccumulation to 2. This is different to accumulate_grad_batches which was set to 1. To change gradientAccumulation, please set accumulate_grad_batches in the Trainer. Setting poptorch.Options gradientAccumulation to 1'):
         trainer.fit(model)
         assert isinstance(trainer.accelerator.training_type_plugin, IPUPlugin)
         assert trainer.accelerator.training_type_plugin.inference_opts.Training.gradient_accumulation == 1

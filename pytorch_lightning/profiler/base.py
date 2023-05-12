@@ -145,8 +145,7 @@ class BaseProfiler(AbstractProfiler):
         # so to avoid them, we open and close the files within this function
         # by calling `_prepare_streams` and `teardown`
         self._prepare_streams()
-        summary = self.summary()
-        if summary:
+        if summary := self.summary():
             self._write_stream(summary)
         if self._output_file is not None:
             self._output_file.flush()
@@ -154,13 +153,12 @@ class BaseProfiler(AbstractProfiler):
 
     def _stats_to_str(self, stats: Dict[str, str]) -> str:
         stage = f"{self._stage.upper()} " if self._stage is not None else ""
-        output = [stage + "Profiler Report"]
+        output = [f"{stage}Profiler Report"]
         for action, value in stats.items():
             header = f"Profile stats for: {action}"
             if self._local_rank is not None:
                 header += f" rank: {self._local_rank}"
-            output.append(header)
-            output.append(value)
+            output.extend((header, value))
         return os.linesep.join(output)
 
     def setup(

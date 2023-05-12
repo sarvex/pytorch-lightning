@@ -28,9 +28,7 @@ class SLURMEnvironment(ClusterEnvironment):
         return True
 
     def master_address(self) -> str:
-        # figure out the root node addr
-        slurm_nodelist = os.environ.get("SLURM_NODELIST")
-        if slurm_nodelist:
+        if slurm_nodelist := os.environ.get("SLURM_NODELIST"):
             root_node = slurm_nodelist.split(" ")[0].split(",")[0]
         else:
             root_node = "127.0.0.1"

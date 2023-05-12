@@ -268,6 +268,8 @@ def test_tensorboard_log_graph_warning_no_example_input_array(tmpdir):
 def test_tensorboard_with_accummulated_gradients(mock_log_metrics, tmpdir):
     """Tests to ensure that tensorboard log properly when accumulated_gradients > 1"""
 
+
+
     class TestModel(BoringModel):
 
         def __init__(self):
@@ -276,10 +278,13 @@ def test_tensorboard_with_accummulated_gradients(mock_log_metrics, tmpdir):
 
         def training_step(self, *args):
             self.log('foo', 1, on_step=True, on_epoch=True)
-            if not self.trainer.fit_loop.should_accumulate():
-                if self.trainer.logger_connector.should_update_logs:
-                    self.indexes.append(self.trainer.global_step)
+            if (
+                not self.trainer.fit_loop.should_accumulate()
+                and self.trainer.logger_connector.should_update_logs
+            ):
+                self.indexes.append(self.trainer.global_step)
             return super().training_step(*args)
+
 
     model = TestModel()
     model.training_epoch_end = None

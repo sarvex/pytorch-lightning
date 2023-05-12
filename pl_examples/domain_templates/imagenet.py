@@ -147,13 +147,12 @@ class ImageNetLightningModel(LightningModule):
             ])
         )
 
-        train_loader = torch.utils.data.DataLoader(
+        return torch.utils.data.DataLoader(
             dataset=train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.workers,
         )
-        return train_loader
 
     def val_dataloader(self):
         normalize = transforms.Normalize(
@@ -161,21 +160,22 @@ class ImageNetLightningModel(LightningModule):
             std=[0.229, 0.224, 0.225],
         )
         val_dir = os.path.join(self.data_path, 'val')
-        val_loader = torch.utils.data.DataLoader(
+        return torch.utils.data.DataLoader(
             datasets.ImageFolder(
                 val_dir,
-                transforms.Compose([
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
-                    transforms.ToTensor(),
-                    normalize,
-                ])
+                transforms.Compose(
+                    [
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        normalize,
+                    ]
+                ),
             ),
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.workers,
         )
-        return val_loader
 
     def test_dataloader(self):
         return self.val_dataloader()

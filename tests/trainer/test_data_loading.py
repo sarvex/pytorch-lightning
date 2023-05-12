@@ -72,7 +72,6 @@ class TestModel(BoringModel):
 
 
 def check_replace_distributed_sampler(tmpdir, save_preds_on_dl_idx, accelerator, gpus, num_dl_idx, mode):
-    num_processes = 2
     limit_test_batches = 2
     trainer_args = {
         "default_root_dir": tmpdir,
@@ -81,6 +80,7 @@ def check_replace_distributed_sampler(tmpdir, save_preds_on_dl_idx, accelerator,
     }
 
     if accelerator == "ddp_cpu":
+        num_processes = 2
         trainer_args["num_processes"] = num_processes
     else:
         trainer_args["gpus"] = gpus

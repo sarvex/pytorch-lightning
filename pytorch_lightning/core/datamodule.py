@@ -149,10 +149,7 @@ class LightningDataModule(CheckpointHooks, DataHooks):
         just as you would with a torch tensor.
         """
 
-        if dim is not None:
-            return self.dims[dim]
-
-        return self.dims
+        return self.dims[dim] if dim is not None else self.dims
 
     @property
     def has_prepared_data(self) -> bool:

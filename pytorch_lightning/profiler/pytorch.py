@@ -136,23 +136,22 @@ class ScheduleWrapper:
             return self._num_validation_step
         if self._current_action == "test_step":
             return self._num_test_step
-        if self._current_action == "predict_step":
-            return self._num_predict_step
-        return 0
+        return self._num_predict_step if self._current_action == "predict_step" else 0
 
     def _step(self) -> None:
-        if self._current_action == "training_step_and_backward":
-            self._num_training_step_and_backward += 1
-        elif self._current_action == "validation_step":
-            if self._start_action_name == "on_fit_start":
-                if self._num_training_step_and_backward > 0:
-                    self._num_validation_step += 1
-            else:
-                self._num_validation_step += 1
+        if self._current_action == "predict_step":
+            self._num_predict_step += 1
         elif self._current_action == "test_step":
             self._num_test_step += 1
-        elif self._current_action == "predict_step":
-            self._num_predict_step += 1
+        elif self._current_action == "training_step_and_backward":
+            self._num_training_step_and_backward += 1
+        elif self._current_action == "validation_step":
+            if (
+                self._start_action_name == "on_fit_start"
+                and self._num_training_step_and_backward > 0
+                or self._start_action_name != "on_fit_start"
+            ):
+                self._num_validation_step += 1
 
     @property
     def has_finished(self) -> bool:

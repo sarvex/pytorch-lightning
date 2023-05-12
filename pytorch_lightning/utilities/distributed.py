@@ -177,16 +177,14 @@ def sync_ddp(
     Return:
         reduced value
     """
-    divide_by_world_size = False
-
     if group is None:
         group = torch.distributed.group.WORLD
 
     op = reduce_op if isinstance(reduce_op, ReduceOp) else ReduceOp.SUM
 
-    if isinstance(reduce_op, str) and reduce_op.lower() in ("avg", "mean"):
-        divide_by_world_size = True
-
+    divide_by_world_size = isinstance(
+        reduce_op, str
+    ) and reduce_op.lower() in ("avg", "mean")
     # sync all processes before reduction
     torch.distributed.barrier(group=group)
     torch.distributed.all_reduce(result, op=op, group=group, async_op=False)
@@ -342,6 +340,4 @@ def register_ddp_comm_hook(
 
 
 def tpu_distributed() -> bool:
-    if _TPU_AVAILABLE:
-        return xm.xrt_world_size() > 1
-    return False
+    return xm.xrt_world_size() > 1 if _TPU_AVAILABLE else False

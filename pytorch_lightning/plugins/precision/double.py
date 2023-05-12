@@ -38,9 +38,7 @@ class LightningDoublePrecisionModule(_LightningPrecisionModuleWrapperBase):
 
     @staticmethod
     def _to_double_precision(data: torch.Tensor) -> torch.Tensor:
-        if data.is_floating_point():
-            return data.double()
-        return data
+        return data.double() if data.is_floating_point() else data
 
     @staticmethod
     def _move_float_tensors_to_double(collection: Any) -> Any:

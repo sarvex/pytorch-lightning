@@ -50,8 +50,7 @@ class TestEpochEndVariations(ABC):
         test_acc_mean /= len(outputs)
 
         metrics_dict = {'test_loss': test_loss_mean, 'test_acc': test_acc_mean}
-        result = {'progress_bar': metrics_dict, 'log': metrics_dict}
-        return result
+        return {'progress_bar': metrics_dict, 'log': metrics_dict}
 
     def test_epoch_end__multiple_dataloaders(self, outputs):
         """
@@ -86,5 +85,4 @@ class TestEpochEndVariations(ABC):
         test_acc_mean /= i
 
         tqdm_dict = {'test_loss': test_loss_mean, 'test_acc': test_acc_mean}
-        result = {'progress_bar': tqdm_dict}
-        return result
+        return {'progress_bar': tqdm_dict}

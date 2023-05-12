@@ -288,7 +288,7 @@ class DQNLightning(pl.LightningModule):
         Args:
             steps: number of random steps to populate the buffer with
         """
-        for i in range(steps):
+        for _ in range(steps):
             self.agent.play_step(self.net, epsilon=1.0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -301,8 +301,7 @@ class DQNLightning(pl.LightningModule):
         Returns:
             q values
         """
-        output = self.net(x)
-        return output
+        return self.net(x)
 
     def dqn_mse_loss(self, batch: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
         """
@@ -373,12 +372,11 @@ class DQNLightning(pl.LightningModule):
     def __dataloader(self) -> DataLoader:
         """Initialize the Replay Buffer dataset used for retrieving experiences"""
         dataset = RLDataset(self.buffer, self.episode_length)
-        dataloader = DataLoader(
+        return DataLoader(
             dataset=dataset,
             batch_size=self.batch_size,
             sampler=None,
         )
-        return dataloader
 
     def train_dataloader(self) -> DataLoader:
         """Get train loader"""

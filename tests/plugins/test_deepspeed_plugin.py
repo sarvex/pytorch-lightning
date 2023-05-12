@@ -463,14 +463,15 @@ class ModelParallelClassificationModel(LightningModule):
         return nn.Sequential(nn.Linear(32, 32, bias=False), nn.ReLU())
 
     def configure_sharded_model(self) -> None:
-        self.model = nn.Sequential(*(self.make_block() for x in range(self.num_blocks)), nn.Linear(32, 3))
+        self.model = nn.Sequential(
+            *(self.make_block() for _ in range(self.num_blocks)), nn.Linear(32, 3)
+        )
 
     def forward(self, x):
         x = self.model(x)
         # Ensure output is in float32 for softmax operation
         x = x.float()
-        logits = F.softmax(x, dim=1)
-        return logits
+        return F.softmax(x, dim=1)
 
     def training_step(self, batch, batch_idx):
         x, y = batch

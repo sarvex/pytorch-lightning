@@ -39,8 +39,7 @@ class PrecisionPlugin(Plugin, CheckpointHooks):
         Maybe different in other precision plugins.
         """
         for group in optimizer.param_groups:
-            for p in group["params"]:
-                yield p
+            yield from group["params"]
 
     def connect(
         self,

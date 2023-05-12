@@ -82,7 +82,7 @@ class TensorRunningAccum(object):
         self.current_idx += 1
 
         # reset index when hit limit of tensor
-        self.current_idx = self.current_idx % self.window_length
+        self.current_idx %= self.window_length
         if self.current_idx == 0:
             self.rotated = True
 
@@ -283,12 +283,11 @@ class CombinedDataset(object):
 
         compute_func = CombinedDataset.COMPUTE_FUNCS[mode]
 
-        if isinstance(all_lengths, (int, float)):
-            length = all_lengths
-        else:
-            length = _nested_calc_num_data(all_lengths, compute_func)
-
-        return length
+        return (
+            all_lengths
+            if isinstance(all_lengths, (int, float))
+            else _nested_calc_num_data(all_lengths, compute_func)
+        )
 
     def _get_len_recursive(self, data) -> int:
         if isinstance(data, Dataset):

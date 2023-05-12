@@ -161,16 +161,14 @@ class EvaluationLoop(DataLoaderLoop):
     def get_max_batches(self) -> List[Union[int, float]]:
         """Returns the max number of batches for each dataloader"""
         if self.trainer.testing:
-            max_batches = self.trainer.num_test_batches
+            return self.trainer.num_test_batches
+        elif self.trainer.sanity_checking:
+            self.trainer.num_sanity_val_batches = [
+                min(self.trainer.num_sanity_val_steps, val_batches) for val_batches in self.trainer.num_val_batches
+            ]
+            return self.trainer.num_sanity_val_batches
         else:
-            if self.trainer.sanity_checking:
-                self.trainer.num_sanity_val_batches = [
-                    min(self.trainer.num_sanity_val_steps, val_batches) for val_batches in self.trainer.num_val_batches
-                ]
-                max_batches = self.trainer.num_sanity_val_batches
-            else:
-                max_batches = self.trainer.num_val_batches
-        return max_batches
+            return self.trainer.num_val_batches
 
     def reload_evaluation_dataloaders(self) -> None:
         """Reloads dataloaders if necessary"""
@@ -255,10 +253,9 @@ class EvaluationLoop(DataLoaderLoop):
                 model._current_fx_name = "test_epoch_end"
                 model.test_epoch_end(outputs)
 
-        else:
-            if is_overridden("validation_epoch_end", model):
-                model._current_fx_name = "validation_epoch_end"
-                model.validation_epoch_end(outputs)
+        elif is_overridden("validation_epoch_end", model):
+            model._current_fx_name = "validation_epoch_end"
+            model.validation_epoch_end(outputs)
 
     def on_evaluation_epoch_end(self) -> None:
         """Runs ``on_{validation/test}_epoch_end`` hook"""

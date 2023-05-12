@@ -78,12 +78,10 @@ def test_pytorch_parity(
 
 
 def _hook_memory():
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
-        used_memory = torch.cuda.max_memory_allocated()
-    else:
-        used_memory = np.nan
-    return used_memory
+    if not torch.cuda.is_available():
+        return np.nan
+    torch.cuda.synchronize()
+    return torch.cuda.max_memory_allocated()
 
 
 def measure_loops(cls_model, kind, num_runs=10, num_epochs=10):
@@ -139,8 +137,7 @@ def vanilla_loop(cls_model, idx, device_type: str = 'cuda', num_epochs=10):
 
     epoch_losses = []
     # as the first run is skipped, no need to run it long
-    for epoch in range(num_epochs if idx > 0 else 1):
-
+    for _ in range(num_epochs if idx > 0 else 1):
         # run through full training set
         for j, batch in enumerate(dl):
             batch = [x.to(device) for x in batch]

@@ -51,8 +51,7 @@ class HorovodPlugin(ParallelPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=self.world_size, rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(num_replicas=self.world_size, rank=self.global_rank)
 
     def setup(self, model):
         self._model = model
@@ -85,7 +84,11 @@ class HorovodPlugin(ParallelPlugin):
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
         def _filter_named_parameters(model, optimizer):
-            opt_params = set([p for group in optimizer.param_groups for p in group.get("params", [])])
+            opt_params = {
+                p
+                for group in optimizer.param_groups
+                for p in group.get("params", [])
+            }
             return [(name, p) for name, p in model.named_parameters() if p in opt_params]
 
         # Horovod: wrap optimizers to perform gradient aggregation via allreduce
@@ -191,8 +194,7 @@ class HorovodPlugin(ParallelPlugin):
         # sync and gather all
         self.join()
         gathered = hvd.allgather(result)
-        gathered_result = list(gathered.split(1, dim=0))
-        return gathered_result
+        return list(gathered.split(1, dim=0))
 
     def post_backward(self, closure_loss: torch.Tensor, should_accumulate: bool, optimizer: Optimizer, opt_idx: int):
         # synchronize all horovod optimizers.

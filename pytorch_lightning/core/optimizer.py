@@ -42,12 +42,18 @@ class LightningOptimizer:
         # For Horovod
         if hasattr(optimizer, "skip_synchronize"):
             self.__class__ = type(
-                "Lightning" + optimizer.__class__.__name__, (self.__class__, optimizer.__class__.__bases__[0]), {}
+                f"Lightning{optimizer.__class__.__name__}",
+                (self.__class__, optimizer.__class__.__bases__[0]),
+                {},
             )
             self.skip_synchronize = optimizer.skip_synchronize
             self.synchronize = optimizer.synchronize
         else:
-            self.__class__ = type("Lightning" + optimizer.__class__.__name__, (self.__class__, optimizer.__class__), {})
+            self.__class__ = type(
+                f"Lightning{optimizer.__class__.__name__}",
+                (self.__class__, optimizer.__class__),
+                {},
+            )
 
         self._optimizer = optimizer
         self._trainer = None
@@ -205,11 +211,11 @@ class LightningOptimizer:
         if closure is None:
             profiler_name = "closure_{self._optimizer_idx}"
             closure = do_nothing_closure
-        else:
-            if not callable(closure):
-                raise MisconfigurationException("When closure is provided, it should be a function")
+        elif callable(closure):
             profiler_name = f"optimizer_step_and_closure_{self._optimizer_idx}"
 
+        else:
+            raise MisconfigurationException("When closure is provided, it should be a function")
         self.__optimizer_step(*args, closure=closure, profiler_name=profiler_name, **kwargs)
         self._total_optimizer_step_calls += 1
 

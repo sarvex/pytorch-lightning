@@ -117,6 +117,8 @@ def test_multiple_optimizers_multiple_dataloaders(tmpdir):
     Tests that only training_step can be used
     """
 
+
+
     class TestModel(BoringModel):
 
         def on_train_epoch_start(self) -> None:
@@ -132,8 +134,7 @@ def test_multiple_optimizers_multiple_dataloaders(tmpdir):
                 raise Exception('should only have two optimizers')
 
             self.training_step_called = True
-            loss = self.step(batch[0])
-            return loss
+            return self.step(batch[0])
 
         def training_epoch_end(self, outputs) -> None:
             # outputs should be an array with an entry per optimizer
@@ -156,6 +157,7 @@ def test_multiple_optimizers_multiple_dataloaders(tmpdir):
             optimizer = torch.optim.SGD(self.layer.parameters(), lr=0.1)
             optimizer_2 = torch.optim.SGD(self.layer.parameters(), lr=0.1)
             return optimizer, optimizer_2
+
 
     model = TestModel()
     model.validation_epoch_end = None

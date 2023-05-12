@@ -110,6 +110,9 @@ def test_top_k(save_mock, tmpdir, k: int, epochs: int, val_check_interval: float
 @pytest.mark.parametrize(['k', 'epochs', 'val_check_interval', 'expected'], [(1, 1, 1.0, 1), (2, 2, 0.3, 5)])
 def test_top_k_ddp(save_mock, tmpdir, k, epochs, val_check_interval, expected):
 
+
+
+
     class TestModel(BoringModel):
 
         def training_step(self, batch, batch_idx):
@@ -118,14 +121,15 @@ def test_top_k_ddp(save_mock, tmpdir, k, epochs, val_check_interval, expected):
             return super().training_step(batch, batch_idx)
 
         def training_epoch_end(self, outputs) -> None:
-            local_rank = int(os.getenv("LOCAL_RANK"))
             if self.trainer.is_global_zero:
+                local_rank = int(os.getenv("LOCAL_RANK"))
                 self.log('my_loss_2', (1 + local_rank), on_epoch=True, rank_zero_only=True)
             data = str(self.global_rank)
             obj = [[data], (data, ), set(data)]
             out = self.trainer.training_type_plugin.broadcast(obj)
             assert obj == [[str(self.global_rank)], (str(self.global_rank), ), set(str(self.global_rank))]
             assert out == [['0'], ('0', ), set('0')]
+
 
     model = TestModel()
     trainer = Trainer(

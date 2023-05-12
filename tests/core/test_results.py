@@ -68,6 +68,9 @@ def test_result_reduce_ddp():
 ])
 def test_write_predictions(tmpdir, option: int, do_train: bool, gpus: int):
 
+
+
+
     class CustomBoringModel(BoringModel):
 
         def test_step(self, batch, batch_idx, optimizer_idx=None):
@@ -76,8 +79,8 @@ def test_write_predictions(tmpdir, option: int, do_train: bool, gpus: int):
             self.log('test_loss', test_loss)
 
             batch_size = batch.size(0)
-            lst_of_str = [random.choice(['dog', 'cat']) for i in range(batch_size)]
-            lst_of_int = [random.randint(500, 1000) for i in range(batch_size)]
+            lst_of_str = [random.choice(['dog', 'cat']) for _ in range(batch_size)]
+            lst_of_int = [random.randint(500, 1000) for _ in range(batch_size)]
             lst_of_lst = [[x] for x in lst_of_int]
             lst_of_dict = [{k: v} for k, v in zip(lst_of_str, lst_of_int)]
 
@@ -123,6 +126,7 @@ def test_write_predictions(tmpdir, option: int, do_train: bool, gpus: int):
 
             elif option == 7:
                 self.write_prediction_dict({'idxs': lazy_ids, 'preds': output}, prediction_file)
+
 
     prediction_file = Path(tmpdir) / 'predictions.pt'
 

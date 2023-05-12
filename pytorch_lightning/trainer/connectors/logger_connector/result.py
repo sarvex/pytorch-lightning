@@ -376,9 +376,8 @@ class ResultCollection(dict):
 
     @minimize.setter
     def minimize(self, loss: Optional[torch.Tensor]) -> None:
-        if loss is not None:
-            if not isinstance(loss, torch.Tensor):
-                raise ValueError(f"`Result.minimize` must be a `torch.Tensor`, found: {loss}")
+        if loss is not None and not isinstance(loss, torch.Tensor):
+            raise ValueError(f"`Result.minimize` must be a `torch.Tensor`, found: {loss}")
         self._minimize = loss
 
     @property
@@ -515,8 +514,11 @@ class ResultCollection(dict):
 
     def valid_items(self) -> Generator:
         """This function is used to iterate over current valid metrics."""
-        return ((k, v) for k, v in self.items()
-                if not k == "_extra" and not (isinstance(v, ResultMetric) and v.has_reset))
+        return (
+            (k, v)
+            for k, v in self.items()
+            if k != "_extra" and not (isinstance(v, ResultMetric) and v.has_reset)
+        )
 
     def _forked_name(self, result_metric: ResultMetric, on_step: bool) -> Tuple[str, str]:
         name = result_metric.meta.name

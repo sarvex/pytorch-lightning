@@ -281,10 +281,7 @@ class TensorBoardLogger(LightningLoggerBase):
             if self._fs.isdir(d) and bn.startswith("version_"):
                 dir_ver = bn.split("_")[1].replace('/', '')
                 existing_versions.append(int(dir_ver))
-        if len(existing_versions) == 0:
-            return 0
-
-        return max(existing_versions) + 1
+        return 0 if not existing_versions else max(existing_versions) + 1
 
     def __getstate__(self):
         state = self.__dict__.copy()

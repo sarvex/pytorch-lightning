@@ -112,13 +112,10 @@ class EvalModelTemplate(
         x = self.c_d1_drop(x)
 
         x = self.c_d2(x)
-        logits = F.softmax(x, dim=1)
-
-        return logits
+        return F.softmax(x, dim=1)
 
     def loss(self, labels, logits):
-        nll = F.nll_loss(logits, labels)
-        return nll
+        return F.nll_loss(logits, labels)
 
     def prepare_data(self):
         TrialMNIST(root=self.data_root, train=True, download=True)

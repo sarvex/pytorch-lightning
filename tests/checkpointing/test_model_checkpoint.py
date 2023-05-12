@@ -523,7 +523,7 @@ def test_model_checkpoint_save_last(tmpdir):
     last_filename = model_checkpoint._format_checkpoint_name(
         ModelCheckpoint.CHECKPOINT_NAME_LAST, {'epoch': trainer.current_epoch}
     )
-    last_filename = last_filename + '.ckpt'
+    last_filename = f'{last_filename}.ckpt'
     assert str(tmpdir / last_filename) == model_checkpoint.last_model_path
     assert set(os.listdir(tmpdir)) == set([f"epoch={i}-step={j}.ckpt"
                                            for i, j in zip(range(epochs), [9, 19, 29])] + [last_filename])
@@ -823,7 +823,9 @@ def test_model_checkpoint_topk_all(tmpdir):
     assert checkpoint_callback.best_model_path == tmpdir / "epoch=2.ckpt"
     assert checkpoint_callback.best_model_score == epochs - 1
     assert len(os.listdir(tmpdir)) == len(checkpoint_callback.best_k_models) == epochs
-    assert set(checkpoint_callback.best_k_models.keys()) == set(str(tmpdir / f"epoch={i}.ckpt") for i in range(epochs))
+    assert set(checkpoint_callback.best_k_models.keys()) == {
+        str(tmpdir / f"epoch={i}.ckpt") for i in range(epochs)
+    }
     assert checkpoint_callback.kth_best_model_path == tmpdir / 'epoch=0.ckpt'
 
 
@@ -985,7 +987,7 @@ def test_checkpoint_repeated_strategy(tmpdir):
     trainer.fit(model)
     assert os.listdir(tmpdir) == ['epoch=00.ckpt']
 
-    for idx in range(4):
+    for _ in range(4):
         # load from checkpoint
         model = LogInTwoMethods.load_from_checkpoint(checkpoint_callback.best_model_path)
         trainer = pl.Trainer(
@@ -1275,7 +1277,7 @@ def test_ckpt_version_after_rerun_new_trainer(tmpdir):
         assert {Path(f).name for f in mc.best_k_models} == expected
 
     # check created ckpts
-    assert set(f.basename for f in tmpdir.listdir()) == {
+    assert {f.basename for f in tmpdir.listdir()} == {
         "epoch=0.ckpt",
         "epoch=1.ckpt",
         "epoch=0-v1.ckpt",

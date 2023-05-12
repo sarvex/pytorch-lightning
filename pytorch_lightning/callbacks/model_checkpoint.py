@@ -270,11 +270,11 @@ class ModelCheckpoint(Callback):
 
     def on_validation_end(self, trainer: 'pl.Trainer', pl_module: 'pl.LightningModule') -> None:
         """ Save a checkpoint at the end of the validation stage. """
-        skip = (
-            self._should_skip_saving_checkpoint(trainer) or self._every_n_val_epochs < 1
+        if skip := (
+            self._should_skip_saving_checkpoint(trainer)
+            or self._every_n_val_epochs < 1
             or (trainer.current_epoch + 1) % self._every_n_val_epochs != 0
-        )
-        if skip:
+        ):
             return
         self.save_checkpoint(trainer)
 
@@ -725,7 +725,7 @@ class ModelCheckpoint(Callback):
         self.best_model_path = filepath
 
     def _is_valid_monitor_key(self, metrics: Dict[str, _METRIC]) -> bool:
-        return self.monitor in metrics or len(metrics) == 0
+        return self.monitor in metrics or not metrics
 
     def _update_best_and_save(
         self, current: torch.Tensor, trainer: 'pl.Trainer', monitor_candidates: Dict[str, _METRIC]

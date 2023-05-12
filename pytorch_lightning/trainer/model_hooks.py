@@ -48,6 +48,4 @@ class TrainerModelHooksMixin(ABC):
         )
         model = self.lightning_module
         f_op = getattr(model, f_name, None)
-        if not f_op:
-            return False
-        return is_param_in_hook_signature(f_op, arg_name)
+        return False if not f_op else is_param_in_hook_signature(f_op, arg_name)

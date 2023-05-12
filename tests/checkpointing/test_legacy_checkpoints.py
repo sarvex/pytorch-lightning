@@ -80,7 +80,7 @@ def test_resume_legacy_checkpoints(tmpdir, pl_version: str):
     from zero_training import DummyModel
 
     path_ckpts = sorted(glob.glob(os.path.join(path_dir, f'*{CHECKPOINT_EXTENSION}')))
-    assert path_ckpts, 'No checkpoints found in folder "%s"' % path_dir
+    assert path_ckpts, f'No checkpoints found in folder "{path_dir}"'
     path_ckpt = path_ckpts[-1]
 
     model = DummyModel.load_from_checkpoint(path_ckpt)

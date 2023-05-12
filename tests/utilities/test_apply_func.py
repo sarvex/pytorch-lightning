@@ -72,21 +72,28 @@ def test_recursive_application_to_collection():
     reduced = apply_to_collection(to_reduce, (torch.Tensor, numbers.Number, np.ndarray), lambda x: x * 2)
 
     assert isinstance(reduced, dict), ' Type Consistency of dict not preserved'
-    assert all([x in reduced for x in to_reduce]), 'Not all entries of the dict were preserved'
-    assert all([isinstance(reduced[k], type(expected_result[k])) for k in to_reduce]), \
-        'At least one type was not correctly preserved'
+    assert all(
+        x in reduced for x in to_reduce
+    ), 'Not all entries of the dict were preserved'
+    assert all(
+        isinstance(reduced[k], type(expected_result[k])) for k in to_reduce
+    ), 'At least one type was not correctly preserved'
 
     assert isinstance(reduced['a'], torch.Tensor), 'Reduction Result of a Tensor should be a Tensor'
     assert torch.allclose(expected_result['a'], reduced['a']), \
         'Reduction of a tensor does not yield the expected value'
 
     assert isinstance(reduced['b'], list), 'Reduction Result of a list should be a list'
-    assert all([torch.allclose(x, y) for x, y in zip(reduced['b'], expected_result['b'])]), \
-        'At least one value of list reduction did not come out as expected'
+    assert all(
+        torch.allclose(x, y)
+        for x, y in zip(reduced['b'], expected_result['b'])
+    ), 'At least one value of list reduction did not come out as expected'
 
     assert isinstance(reduced['c'], tuple), 'Reduction Result of a tuple should be a tuple'
-    assert all([torch.allclose(x, y) for x, y in zip(reduced['c'], expected_result['c'])]), \
-        'At least one value of tuple reduction did not come out as expected'
+    assert all(
+        torch.allclose(x, y)
+        for x, y in zip(reduced['c'], expected_result['c'])
+    ), 'At least one value of tuple reduction did not come out as expected'
 
     assert isinstance(reduced['d'], ntc), 'Type Consistency for named tuple not given'
     assert isinstance(reduced['d'].bar, numbers.Number), \
@@ -129,7 +136,6 @@ def test_recursive_application_to_collection():
     reduced = apply_to_collection(OrderedDict([('b', 2), ('a', 1)]), int, lambda x: str(x))
     assert reduced == OrderedDict([('b', '2'), ('a', '1')])
 
-    # custom mappings
     class _CustomCollection(dict):
 
         def __init__(self, initial_dict):

@@ -281,8 +281,7 @@ class TrainerProperties(ABC):
 
         standard_metrics = ref_model.get_progress_bar_dict()
         pbar_metrics = self.progress_bar_metrics
-        duplicates = list(standard_metrics.keys() & pbar_metrics.keys())
-        if duplicates:
+        if duplicates := list(standard_metrics.keys() & pbar_metrics.keys()):
             rank_zero_warn(
                 f"The progress bar already tracks a metric with the name(s) '{', '.join(duplicates)}' and"
                 f" `self.log('{duplicates[0]}', ..., prog_bar=True)` will overwrite this value. "
@@ -300,8 +299,10 @@ class TrainerProperties(ABC):
     def enable_validation(self) -> bool:
         """ Check if we should run validation during training. """
         model_ref = self.lightning_module
-        val_loop_enabled = is_overridden('validation_step', model_ref) and self.limit_val_batches > 0
-        return val_loop_enabled
+        return (
+            is_overridden('validation_step', model_ref)
+            and self.limit_val_batches > 0
+        )
 
     @property
     def default_root_dir(self) -> str:

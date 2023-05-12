@@ -56,5 +56,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     log.info("Creating a backup of the existing checkpoint file before overwriting in the upgrade process.")
-    copyfile(args.file, args.file + ".bak")
+    copyfile(args.file, f"{args.file}.bak")
     upgrade_checkpoint(args.file)

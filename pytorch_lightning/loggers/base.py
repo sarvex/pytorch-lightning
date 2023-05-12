@@ -212,10 +212,7 @@ class LightningLoggerBase(ABC):
             if isinstance(val, Callable):
                 try:
                     _val = val()
-                    if isinstance(_val, Callable):
-                        return val.__name__
-                    return _val
-                # todo: specify the possible exception
+                    return val.__name__ if isinstance(_val, Callable) else _val
                 except Exception:
                     return getattr(val, "__name__", None)
             return val
@@ -250,8 +247,7 @@ class LightningLoggerBase(ABC):
                     key = str(key)
                     if isinstance(value, (MutableMapping, Namespace)):
                         value = vars(value) if isinstance(value, Namespace) else value
-                        for d in _dict_generator(value, prefixes + [key]):
-                            yield d
+                        yield from _dict_generator(value, prefixes + [key])
                     else:
                         yield prefixes + [key, value if value is not None else str(None)]
             else:
@@ -281,7 +277,7 @@ class LightningLoggerBase(ABC):
          'namespace': 'Namespace(foo=3)',
          'string': 'abc'}
         """
-        for k in params.keys():
+        for k in params:
             # convert relevant np scalars to python types first (instead of str)
             if isinstance(params[k], (np.bool_, np.integer, np.floating)):
                 params[k] = params[k].item()
@@ -429,7 +425,7 @@ class LoggerCollection(LightningLoggerBase):
 class DummyExperiment(object):
     """ Dummy experiment """
 
-    def nop(*args, **kw):
+    def nop(self, **kw):
         pass
 
     def __getattr__(self, _):
@@ -512,7 +508,7 @@ def merge_dicts(
          'd': {'d1': 3, 'd2': 3, 'd3': 3, 'd4': {'d5': 1}},
          'v': 2.3}
     """
-    agg_key_funcs = agg_key_funcs or dict()
+    agg_key_funcs = agg_key_funcs or {}
     keys = list(functools.reduce(operator.or_, [set(d.keys()) for d in dicts]))
     d_out = {}
     for k in keys:

@@ -78,8 +78,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=len(self.parallel_devices), rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(num_replicas=len(self.parallel_devices), rank=self.global_rank)
 
     def reconciliate_processes(self, trace: str):
         """
@@ -93,7 +92,7 @@ class ParallelPlugin(TrainingTypePlugin, ABC):
     def reduce_boolean_decision(self, decision: bool) -> bool:
         decision = torch.tensor(int(decision), device=self.lightning_module.device)
         decision = self.reduce(decision, reduce_op=ReduceOp.SUM)
-        decision = bool(decision == self.world_size)
+        decision = decision == self.world_size
         return decision
 
     @property

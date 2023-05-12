@@ -325,7 +325,7 @@ class DeepSpeedPlugin(DDPPlugin):
         if config is None and self.DEEPSPEED_ENV_VAR in os.environ:
             rank_zero_info(f"Loading DeepSpeed config from set {self.DEEPSPEED_ENV_VAR} environment variable")
             config = os.environ[self.DEEPSPEED_ENV_VAR]
-        if isinstance(config, str) or isinstance(config, Path):
+        if isinstance(config, (str, Path)):
             if not os.path.isfile(config):
                 raise MisconfigurationException(
                     f"You passed in a path to a DeepSpeed config but the path does not exist: {config}"
@@ -448,12 +448,14 @@ class DeepSpeedPlugin(DDPPlugin):
             'train_micro_batch_size_per_gpu': 1,
         }
         if 'fp16' in self.config:
-            inference_config.update({"fp16": self.config["fp16"]})
+            inference_config["fp16"] = self.config["fp16"]
         if self.zero_stage_3:
-            inference_config.update({
-                "zero_allow_untested_optimizer": self.config['zero_allow_untested_optimizer'],
+            inference_config |= {
+                "zero_allow_untested_optimizer": self.config[
+                    'zero_allow_untested_optimizer'
+                ],
                 "zero_optimization": self.config['zero_optimization'],
-            })
+            }
         # Remove all module hooks before initializing new model
         remove_module_hooks(model)
         model, _, _, _ = deepspeed.initialize(
@@ -479,8 +481,7 @@ class DeepSpeedPlugin(DDPPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=self.world_size, rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(num_replicas=self.world_size, rank=self.global_rank)
 
     def init_optimizers(self, trainer: 'pl.Trainer', model: 'pl.LightningModule') -> Tuple[List, List, List]:
         # Skip initializing optimizers here as DeepSpeed handles optimizers via config.
@@ -540,10 +541,10 @@ class DeepSpeedPlugin(DDPPlugin):
         return batch_size
 
     def _format_precision_config(self):
-        amp_type = self.lightning_module.trainer.accelerator_connector.amp_type
         amp_level = self.lightning_module.trainer.accelerator_connector.amp_level
         precision = self.lightning_module.trainer.accelerator_connector.precision
         if precision == 16:
+            amp_type = self.lightning_module.trainer.accelerator_connector.amp_type
             if "fp16" not in self.config and amp_type == AMPType.NATIVE:
                 # FP16 is a DeepSpeed standalone AMP implementation
                 rank_zero_info("Enabling DeepSpeed FP16.")
@@ -561,7 +562,11 @@ class DeepSpeedPlugin(DDPPlugin):
                     "enabled": True,
                     "opt_level": amp_level,
                 }
-        if "zero_optimization" in self.config and not ("amp" in self.config or "fp16" in self.config):
+        if (
+            "zero_optimization" in self.config
+            and "amp" not in self.config
+            and "fp16" not in self.config
+        ):
             raise MisconfigurationException("To use DeepSpeed ZeRO Optimization, you must set precision=16.")
 
     def _create_default_config(

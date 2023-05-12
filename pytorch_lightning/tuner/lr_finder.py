@@ -87,8 +87,10 @@ class _LRFinder(object):
     """
 
     def __init__(self, mode: str, lr_min: float, lr_max: float, num_training: int):
-        assert mode in ('linear', 'exponential'), \
-            'mode should be either `linear` or `exponential`'
+        assert mode in {
+            'linear',
+            'exponential',
+        }, 'mode should be either `linear` or `exponential`'
 
         self.mode = mode
         self.lr_min = lr_min
@@ -364,11 +366,14 @@ class _LRCallback(Callback):
         smoothed_loss = self.avg_loss / (1 - self.beta**(current_step + 1))
 
         # Check if we diverging
-        if self.early_stop_threshold is not None:
-            if current_step > 1 and smoothed_loss > self.early_stop_threshold * self.best_loss:
-                trainer.fit_loop.max_steps = current_step  # stop signal
-                if self.progress_bar:
-                    self.progress_bar.close()
+        if (
+            self.early_stop_threshold is not None
+            and current_step > 1
+            and smoothed_loss > self.early_stop_threshold * self.best_loss
+        ):
+            trainer.fit_loop.max_steps = current_step  # stop signal
+            if self.progress_bar:
+                self.progress_bar.close()
 
         # Save best loss for diverging checking
         if smoothed_loss < self.best_loss or current_step == 1:
@@ -406,7 +411,7 @@ class _LinearLR(_LRScheduler):
         if self.last_epoch > 0:
             val = [base_lr + r * (self.end_lr - base_lr) for base_lr in self.base_lrs]
         else:
-            val = [base_lr for base_lr in self.base_lrs]
+            val = list(self.base_lrs)
         self._lr = val
         return val
 
@@ -444,7 +449,7 @@ class _ExponentialLR(_LRScheduler):
         if self.last_epoch > 0:
             val = [base_lr * (self.end_lr / base_lr)**r for base_lr in self.base_lrs]
         else:
-            val = [base_lr for base_lr in self.base_lrs]
+            val = list(self.base_lrs)
         self._lr = val
         return val
 

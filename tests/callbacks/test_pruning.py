@@ -85,11 +85,10 @@ def train_with_pruning_callback(
     }
     if parameters_to_prune:
         pruning_kwargs["parameters_to_prune"] = [(model.layer.mlp_1, "weight"), (model.layer.mlp_2, "weight")]
+    elif isinstance(pruning_fn, str) and pruning_fn.endswith("_structured"):
+        pruning_kwargs["parameter_names"] = ["weight"]
     else:
-        if isinstance(pruning_fn, str) and pruning_fn.endswith("_structured"):
-            pruning_kwargs["parameter_names"] = ["weight"]
-        else:
-            pruning_kwargs["parameter_names"] = ["weight", "bias"]
+        pruning_kwargs["parameter_names"] = ["weight", "bias"]
     if isinstance(pruning_fn, str) and pruning_fn.endswith("_structured"):
         pruning_kwargs["pruning_dim"] = 0
     if pruning_fn == "ln_structured":

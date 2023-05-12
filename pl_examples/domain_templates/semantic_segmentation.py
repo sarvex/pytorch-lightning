@@ -142,10 +142,7 @@ class KITTI(Dataset):
         """
         Returns a list of absolute paths to images inside given `path`
         """
-        files_list = list()
-        for filename in os.listdir(path):
-            files_list.append(os.path.join(path, filename))
-        return files_list
+        return [os.path.join(path, filename) for filename in os.listdir(path)]
 
 
 class SegModel(pl.LightningModule):

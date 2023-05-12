@@ -23,20 +23,17 @@ class ConfigureOptimizersPool(ABC):
         return whatever optimizers we want here.
         :return: list of optimizers
         """
-        optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
-        return optimizer
+        return optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def configure_optimizers__lbfgs(self):
         """
         return whatever optimizers we want here.
         :return: list of optimizers
         """
-        optimizer = optim.LBFGS(self.parameters(), lr=self.learning_rate)
-        return optimizer
+        return optim.LBFGS(self.parameters(), lr=self.learning_rate)
 
     def configure_optimizers__adagrad(self):
-        optimizer = optim.Adagrad(self.parameters(), lr=self.learning_rate)
-        return optimizer
+        return optim.Adagrad(self.parameters(), lr=self.learning_rate)
 
     def configure_optimizers__single_scheduler(self):
         optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -65,5 +62,4 @@ class ConfigureOptimizersPool(ABC):
         return [optimizer], [lr_scheduler]
 
     def configure_optimizers__lr_from_hparams(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
-        return optimizer
+        return optim.Adam(self.parameters(), lr=self.hparams.learning_rate)

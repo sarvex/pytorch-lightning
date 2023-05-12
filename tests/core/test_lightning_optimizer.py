@@ -160,7 +160,6 @@ def test_state(tmpdir):
     assert isinstance(lightning_optimizer, Adam)
     assert isinstance(lightning_optimizer, Optimizer)
 
-    lightning_dict = {}
     special_attrs = [
         "_accumulate_grad_batches",
         "_optimizer",
@@ -177,10 +176,11 @@ def test_state(tmpdir):
         "_total_optimizer_step_calls",
     ]
 
-    for k, v in lightning_optimizer.__dict__.items():
-        if k not in special_attrs:
-            lightning_dict[k] = v
-
+    lightning_dict = {
+        k: v
+        for k, v in lightning_optimizer.__dict__.items()
+        if k not in special_attrs
+    }
     assert lightning_dict == optimizer.__dict__
     assert optimizer.state_dict() == lightning_optimizer.state_dict()
     assert optimizer.state == lightning_optimizer.state
@@ -344,8 +344,8 @@ class OptimizerWithHooks(Optimizer):
         Saves grad on output of layer to
         grad is scaled with batch_size since gradient is spread over samples in mini batch
         """
-        batch_size = grad_output[0].shape[0]
         if mod.training:
+            batch_size = grad_output[0].shape[0]
             self.state[mod]['grad'] = grad_output[0] * batch_size
 
     def step(self, closure=None):

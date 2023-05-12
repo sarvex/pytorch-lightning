@@ -130,11 +130,13 @@ def test_log_momentum_no_momentum_optimizer(tmpdir):
 def test_lr_monitor_no_lr_scheduler(tmpdir):
     tutils.reset_seed()
 
+
+
     class CustomBoringModel(BoringModel):
 
         def configure_optimizers(self):
-            optimizer = optim.SGD(self.parameters(), lr=0.1)
-            return optimizer
+            return optim.SGD(self.parameters(), lr=0.1)
+
 
     model = CustomBoringModel()
 
@@ -210,11 +212,11 @@ def test_lr_monitor_multi_lrs(tmpdir, logging_interval: str):
     assert lr_monitor.lr_sch_names == ['lr-Adam', 'lr-Adam-1'], \
         'Names of learning rates not set correctly'
 
-    if logging_interval == 'step':
-        expected_number_logged = trainer.global_step // log_every_n_steps
     if logging_interval == 'epoch':
         expected_number_logged = trainer.max_epochs
 
+    elif logging_interval == 'step':
+        expected_number_logged = trainer.global_step // log_every_n_steps
     assert all(len(lr) == expected_number_logged for lr in lr_monitor.lrs.values()), \
         'Length of logged learning rates do not match the expected number'
 
@@ -356,6 +358,7 @@ def test_lr_monitor_duplicate_custom_pg_names(tmpdir):
 
 def test_multiple_optimizers_basefinetuning(tmpdir):
 
+
     class TestModel(BoringModel):
 
         def __init__(self):
@@ -386,10 +389,12 @@ def test_multiple_optimizers_basefinetuning(tmpdir):
             ]
             return optimizers, schedulers
 
+
+
     class Check(Callback):
 
         def on_train_epoch_start(self, trainer, pl_module) -> None:
-            num_param_groups = sum([len(opt.param_groups) for opt in trainer.optimizers])
+            num_param_groups = sum(len(opt.param_groups) for opt in trainer.optimizers)
             assert lr_monitor.lr_sch_names == ['lr-Adam', 'lr-Adam-1']
             if trainer.current_epoch == 0:
                 assert num_param_groups == 3
@@ -402,6 +407,7 @@ def test_multiple_optimizers_basefinetuning(tmpdir):
             else:
                 expected = ['lr-Adam/pg1', 'lr-Adam/pg2', 'lr-Adam-1/pg1', 'lr-Adam-1/pg2', 'lr-Adam-1/pg3']
                 assert list(lr_monitor.lrs) == expected
+
 
     class TestFinetuning(BackboneFinetuning):
 

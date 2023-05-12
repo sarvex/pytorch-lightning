@@ -154,11 +154,9 @@ class TrainingEpochLoop(loops.Loop):
         Raises:
             StopIteration: if :attr:`done` evaluates to ``True`` to finish this epoch
         """
-        # -----------------------------------------
-        # VALIDATE IF NEEDED + CHECKPOINT CALLBACK
-        # -----------------------------------------
-        should_check_val = self._should_check_val_fx(self.iteration_count, self.is_last_batch)
-        if should_check_val:
+        if should_check_val := self._should_check_val_fx(
+            self.iteration_count, self.is_last_batch
+        ):
             self.trainer.validating = True
             self._run_validation()
             self.trainer.training = True

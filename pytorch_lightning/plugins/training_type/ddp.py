@@ -148,8 +148,10 @@ class DDPPlugin(ParallelPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=(self.num_nodes * self.num_processes), rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(
+            num_replicas=(self.num_nodes * self.num_processes),
+            rank=self.global_rank,
+        )
 
     @property
     def _is_single_process_single_device(self) -> bool:
@@ -232,11 +234,10 @@ class DDPPlugin(ParallelPlugin):
             # start process
             # if hydra is available and initialized, make sure to set the cwd correctly
             cwd: Optional[str] = None
-            if _HYDRA_AVAILABLE:
-                if HydraConfig.initialized():
-                    cwd = get_original_cwd()
-                    os_cwd = f'"{os.getcwd()}"'
-                    command += [f'hydra.run.dir={os_cwd}', f'hydra.job.name=train_ddp_process_{local_rank}']
+            if _HYDRA_AVAILABLE and HydraConfig.initialized():
+                cwd = get_original_cwd()
+                os_cwd = f'"{os.getcwd()}"'
+                command += [f'hydra.run.dir={os_cwd}', f'hydra.job.name=train_ddp_process_{local_rank}']
             proc = subprocess.Popen(command, env=env_copy, cwd=cwd)
             self.interactive_ddp_procs.append(proc)
 
@@ -314,9 +315,7 @@ class DDPPlugin(ParallelPlugin):
         self._register_ddp_hooks()
 
     def determine_ddp_device_ids(self):
-        if self.root_device.type == "cpu":
-            return None
-        return [self.root_device.index]
+        return None if self.root_device.type == "cpu" else [self.root_device.index]
 
     def init_ddp_connection(self, global_rank: Optional[int] = None, world_size: Optional[int] = None) -> None:
         global_rank = global_rank if global_rank is not None else self.cluster_environment.global_rank()

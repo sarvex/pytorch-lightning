@@ -161,6 +161,8 @@ def test_custom_optimizer_step_with_multiple_optimizers(tmpdir):
     even when optimizer.step is not called for a particular optimizer
     """
 
+
+
     class TestModel(BoringModel):
         training_step_called = [0, 0]
         optimizer_step_called = [0, 0]
@@ -178,32 +180,31 @@ def test_custom_optimizer_step_with_multiple_optimizers(tmpdir):
         def training_step(self, batch, batch_idx, optimizer_idx):
             self.training_step_called[optimizer_idx] += 1
             x = self.layer_a(batch[0]) if (optimizer_idx == 0) else self.layer_b(batch[0])
-            loss = torch.nn.functional.mse_loss(x, torch.ones_like(x))
-            return loss
+            return torch.nn.functional.mse_loss(x, torch.ones_like(x))
 
         def training_epoch_end(self, outputs) -> None:
             # outputs should be an array with an entry per optimizer
             assert len(outputs) == 2
 
         def optimizer_step(
-            self,
-            epoch,
-            batch_idx,
-            optimizer,
-            optimizer_idx,
-            optimizer_closure,
-            **_,
-        ):
+                    self,
+                    epoch,
+                    batch_idx,
+                    optimizer,
+                    optimizer_idx,
+                    optimizer_closure,
+                    **_,
+                ):
             # update first optimizer every step
             if optimizer_idx == 0:
                 self.optimizer_step_called[optimizer_idx] += 1
                 optimizer.step(closure=optimizer_closure)
 
             # update second optimizer every 2 steps
-            if optimizer_idx == 1:
-                if batch_idx % 2 == 0:
-                    self.optimizer_step_called[optimizer_idx] += 1
-                    optimizer.step(closure=optimizer_closure)
+            if optimizer_idx == 1 and batch_idx % 2 == 0:
+                self.optimizer_step_called[optimizer_idx] += 1
+                optimizer.step(closure=optimizer_closure)
+
 
     model = TestModel()
     model.val_dataloader = None

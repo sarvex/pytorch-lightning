@@ -131,7 +131,7 @@ class LearningRateMonitor(Callback):
 
         # Initialize for storing values
         self.lrs = {name: [] for name in names}
-        self.last_momentum_values = {name + "-momentum": None for name in names}
+        self.last_momentum_values = {f"{name}-momentum": None for name in names}
 
     def on_train_batch_start(self, trainer, *args, **kwargs):
         if not self._should_log(trainer):
@@ -139,17 +139,13 @@ class LearningRateMonitor(Callback):
 
         if self.logging_interval != 'epoch':
             interval = 'step' if self.logging_interval is None else 'any'
-            latest_stat = self._extract_stats(trainer, interval)
-
-            if latest_stat:
+            if latest_stat := self._extract_stats(trainer, interval):
                 trainer.logger.log_metrics(latest_stat, step=trainer.global_step)
 
     def on_train_epoch_start(self, trainer, *args, **kwargs):
         if self.logging_interval != 'step':
             interval = 'epoch' if self.logging_interval is None else 'any'
-            latest_stat = self._extract_stats(trainer, interval)
-
-            if latest_stat:
+            if latest_stat := self._extract_stats(trainer, interval):
                 trainer.logger.log_metrics(latest_stat, step=trainer.global_step)
 
     def _extract_stats(self, trainer, interval: str) -> Dict[str, float]:
@@ -167,7 +163,7 @@ class LearningRateMonitor(Callback):
                 for i, pg in enumerate(param_groups):
                     name_and_suffix = self._add_suffix(name, param_groups, i)
                     lr = self._extract_lr(pg, name_and_suffix)
-                    latest_stat.update(lr)
+                    latest_stat |= lr
                     momentum = self._extract_momentum(
                         param_group=pg, name=name_and_suffix.replace(name, f'{name}-momentum'), use_betas=use_betas
                     )
@@ -205,7 +201,7 @@ class LearningRateMonitor(Callback):
         if optimizer_cls not in seen_optimizer_types:
             return name
         count = seen_optimizer_types[optimizer_cls]
-        return name + f'-{count - 1}' if count > 1 else name
+        return f'{name}-{count - 1}' if count > 1 else name
 
     def _add_suffix(self, name: str, param_groups: List[Dict], param_group_index: int, use_names: bool = True) -> str:
         if len(param_groups) > 1:
@@ -223,7 +219,7 @@ class LearningRateMonitor(Callback):
         unique = set(names)
         if len(names) == len(unique):
             return set()
-        return set(n for n in names if names.count(n) > 1)
+        return {n for n in names if names.count(n) > 1}
 
     def _find_names(self, lr_schedulers: List, add_lr_sch_names: bool = True) -> List[str]:
         # Create unique names in the case we have multiple of the same learning
@@ -236,7 +232,7 @@ class LearningRateMonitor(Callback):
             if scheduler['name'] is not None:
                 name = scheduler['name']
             else:
-                name = 'lr-' + sch.optimizer.__class__.__name__
+                name = f'lr-{sch.optimizer.__class__.__name__}'
 
             seen_optimizers.append(sch.optimizer)
             optimizer_cls = type(sch.optimizer)
@@ -245,8 +241,7 @@ class LearningRateMonitor(Callback):
 
             # Multiple param groups for the same scheduler
             param_groups = sch.optimizer.param_groups
-            duplicates = self._duplicate_param_group_names(param_groups)
-            if duplicates:
+            if duplicates := self._duplicate_param_group_names(param_groups):
                 raise MisconfigurationException(
                     'A single `Optimizer` cannot have multiple parameter groups with identical '
                     f'`name` values. {name} has duplicated parameter group names {duplicates}'

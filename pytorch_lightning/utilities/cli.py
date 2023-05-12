@@ -22,8 +22,7 @@ from pytorch_lightning.trainer.trainer import Trainer
 from pytorch_lightning.utilities import _module_available
 from pytorch_lightning.utilities.seed import seed_everything
 
-_JSONARGPARSE_AVAILABLE = _module_available("jsonargparse")
-if _JSONARGPARSE_AVAILABLE:
+if _JSONARGPARSE_AVAILABLE := _module_available("jsonargparse"):
     from jsonargparse import ActionConfigFile, ArgumentParser, set_config_read_mode
     set_config_read_mode(fsspec_enabled=True)
 else:
@@ -186,9 +185,11 @@ class LightningCLI:
         self.seed_everything_default = seed_everything_default
         self.subclass_mode_model = subclass_mode_model
         self.subclass_mode_data = subclass_mode_data
-        self.parser_kwargs = {} if parser_kwargs is None else parser_kwargs
-        self.parser_kwargs.update({'description': description, 'env_prefix': env_prefix, 'default_env': env_parse})
-
+        self.parser_kwargs = ({} if parser_kwargs is None else parser_kwargs) | {
+            'description': description,
+            'env_prefix': env_prefix,
+            'default_env': env_parse,
+        }
         self.init_parser()
         self.add_core_arguments_to_parser()
         self.add_arguments_to_parser(self.parser)
@@ -215,7 +216,11 @@ class LightningCLI:
             help='Set to an int to run seed_everything with this value before classes instantiation',
         )
         self.parser.add_lightning_class_args(self.trainer_class, 'trainer')
-        trainer_defaults = {'trainer.' + k: v for k, v in self.trainer_defaults.items() if k != 'callbacks'}
+        trainer_defaults = {
+            f'trainer.{k}': v
+            for k, v in self.trainer_defaults.items()
+            if k != 'callbacks'
+        }
         self.parser.set_defaults(trainer_defaults)
         self.parser.add_lightning_class_args(self.model_class, 'model', subclass_mode=self.subclass_mode_model)
         if self.datamodule_class is not None:

@@ -147,6 +147,8 @@ def test_epoch_results_cache_dp(tmpdir):
 
     root_device = torch.device("cuda", 0)
 
+
+
     class TestModel(BoringModel):
 
         def training_step(self, *args, **kwargs):
@@ -155,8 +157,7 @@ def test_epoch_results_cache_dp(tmpdir):
             return result
 
         def training_step_end(self, training_step_outputs):  # required for dp
-            loss = training_step_outputs["loss"].mean()
-            return loss
+            return training_step_outputs["loss"].mean()
 
         def training_epoch_end(self, outputs):
             assert all(out["loss"].device == root_device for out in outputs)
@@ -188,6 +189,7 @@ def test_epoch_results_cache_dp(tmpdir):
 
         def test_dataloader(self):
             return DataLoader(RandomDataset(32, 64), batch_size=4)
+
 
     model = TestModel()
     trainer = Trainer(

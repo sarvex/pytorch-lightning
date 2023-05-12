@@ -917,9 +917,7 @@ class Trainer(
 
         if self.evaluating:
             return self._run_evaluate()
-        if self.predicting:
-            return self._run_predict()
-        return self._run_train()
+        return self._run_predict() if self.predicting else self._run_train()
 
     def _pre_training_routine(self):
         # wait for all to join if on distributed
@@ -1001,7 +999,7 @@ class Trainer(
             eval_loop_results = self.evaluation_loop.run()
 
         # remove the tensors from the eval results
-        for i, result in enumerate(eval_loop_results):
+        for result in eval_loop_results:
             if isinstance(result, dict):
                 for k, v in result.items():
                     if isinstance(v, torch.Tensor):
@@ -1016,11 +1014,11 @@ class Trainer(
 
     def _run_sanity_check(self, ref_model):
         using_val_step = ref_model.val_dataloader is not None and is_overridden('validation_step', ref_model)
-        should_sanity_check = using_val_step and self.num_sanity_val_steps > 0 and self.limit_val_batches > 0
-
-        # run tiny validation (if validation defined)
-        # to make sure program won't crash during val
-        if should_sanity_check:
+        if (
+            should_sanity_check := using_val_step
+            and self.num_sanity_val_steps > 0
+            and self.limit_val_batches > 0
+        ):
             stage = self.state.stage
             self.sanity_checking = True
 
@@ -1074,7 +1072,7 @@ class Trainer(
 
         # only one process running at this point for TPUs, as spawn isn't triggered yet
         # todo: move this logic internally within the barrier.
-        if not self._device_type == DeviceType.TPU:
+        if self._device_type != DeviceType.TPU:
             self.training_type_plugin.barrier()
 
         self.checkpoint_connector.restore_model_weights(ckpt_path)
@@ -1160,7 +1158,7 @@ class Trainer(
 
     @staticmethod
     def _log_api_event(event: str) -> None:
-        torch._C._log_api_usage_once("lightning.trainer." + event)
+        torch._C._log_api_usage_once(f"lightning.trainer.{event}")
 
     def __init_profiler(self, profiler: Optional[Union[BaseProfiler, str]]) -> None:
         if isinstance(profiler, str):

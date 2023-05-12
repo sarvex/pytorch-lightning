@@ -129,14 +129,12 @@ class TrainingBatchLoop(Loop):
 
         if self.trainer.lightning_module.automatic_optimization:
             for opt_idx, optimizer in self.get_active_optimizers(batch_idx):
-                result = self._run_optimization(batch_idx, split_batch, opt_idx, optimizer)
-                if result:
+                if result := self._run_optimization(
+                    batch_idx, split_batch, opt_idx, optimizer
+                ):
                     self.batch_outputs[opt_idx].append(result.training_step_output)
-        else:
-            # in manual optimization, there is no looping over optimizers
-            result = self._run_optimization(batch_idx, split_batch)
-            if result:
-                self.batch_outputs[0].append(result.training_step_output)
+        elif result := self._run_optimization(batch_idx, split_batch):
+            self.batch_outputs[0].append(result.training_step_output)
 
     def num_active_optimizers(self, batch_idx: Optional[int] = None) -> int:
         """Gets the number of active optimizers based on their frequency"""
@@ -583,9 +581,7 @@ class TrainingBatchLoop(Loop):
             )
 
         if not self.should_accumulate():
-            # track gradients
-            grad_norm_dict = self._track_and_norm_grad(optimizer=optimizer)
-            if grad_norm_dict:
+            if grad_norm_dict := self._track_and_norm_grad(optimizer=optimizer):
                 self.trainer.lightning_module._current_fx_name = "on_after_backward"
                 self.trainer.lightning_module.log_grad_norm(grad_norm_dict)
 
@@ -642,8 +638,9 @@ class TrainingBatchLoop(Loop):
 
         if len(self.trainer.optimizers) > 1:
             training_step_fx = getattr(lightning_module, "training_step")
-            has_opt_idx_in_train_step = is_param_in_hook_signature(training_step_fx, "optimizer_idx")
-            if has_opt_idx_in_train_step:
+            if has_opt_idx_in_train_step := is_param_in_hook_signature(
+                training_step_fx, "optimizer_idx"
+            ):
                 if not lightning_module.automatic_optimization:
                     self.warning_cache.deprecation(
                         "`training_step` hook signature has changed in v1.3."
@@ -651,7 +648,7 @@ class TrainingBatchLoop(Loop):
                         " the old signature will be removed in v1.5"
                     )
                 step_kwargs['optimizer_idx'] = opt_idx
-            elif not has_opt_idx_in_train_step and lightning_module.automatic_optimization:
+            elif lightning_module.automatic_optimization:
                 raise ValueError(
                     f"Your LightningModule defines {len(self.trainer.optimizers)} optimizers but"
                     ' `training_step` is missing the `optimizer_idx` argument.'

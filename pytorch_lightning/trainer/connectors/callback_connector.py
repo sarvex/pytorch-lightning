@@ -76,13 +76,13 @@ class CallbackConnector:
             if isinstance(checkpoint_callback, Callback):
                 error_msg += " Pass callback instances to the `callbacks` argument in the Trainer constructor instead."
             raise MisconfigurationException(error_msg)
-        if self._trainer_has_checkpoint_callbacks() and checkpoint_callback is False:
+        if self._trainer_has_checkpoint_callbacks() and not checkpoint_callback:
             raise MisconfigurationException(
                 "Trainer was configured with checkpoint_callback=False but found ModelCheckpoint"
                 " in callbacks list."
             )
 
-        if not self._trainer_has_checkpoint_callbacks() and checkpoint_callback is True:
+        if not self._trainer_has_checkpoint_callbacks() and checkpoint_callback:
             self.trainer.callbacks.append(ModelCheckpoint())
 
     def _configure_swa_callbacks(self):
@@ -153,8 +153,8 @@ class CallbackConnector:
         model_callbacks = model.configure_callbacks()
         if not model_callbacks:
             return
-        model_callback_types = set(type(c) for c in model_callbacks)
-        trainer_callback_types = set(type(c) for c in trainer.callbacks)
+        model_callback_types = {type(c) for c in model_callbacks}
+        trainer_callback_types = {type(c) for c in trainer.callbacks}
         override_types = model_callback_types.intersection(trainer_callback_types)
         if override_types:
             rank_zero_info(

@@ -52,8 +52,7 @@ def _get_logger_args(logger_class, save_dir):
 def _instantiate_logger(logger_class, save_dir, **override_kwargs):
     args = _get_logger_args(logger_class, save_dir)
     args.update(**override_kwargs)
-    logger = logger_class(**args)
-    return logger
+    return logger_class(**args)
 
 
 def test_loggers_fit_test_all(tmpdir, monkeypatch):
@@ -83,6 +82,7 @@ def test_loggers_fit_test_all(tmpdir, monkeypatch):
 
 
 def _test_loggers_fit_test(tmpdir, logger_class):
+
 
     class CustomModel(BoringModel):
 
@@ -150,14 +150,14 @@ def _test_loggers_fit_test(tmpdir, logger_class):
             (0, ['hp_metric']),
             (1, ['epoch', 'test_loss']),
         ]
-        assert log_metric_names == expected
     else:
         expected = [
             (0, ['epoch', 'train_some_val']),
             (0, ['early_stop_on', 'epoch', 'val_loss']),
             (1, ['epoch', 'test_loss']),
         ]
-        assert log_metric_names == expected
+
+    assert log_metric_names == expected
 
 
 def test_loggers_save_dir_and_weights_save_path_all(tmpdir, monkeypatch):
@@ -247,7 +247,7 @@ def test_loggers_pickle_all(tmpdir, monkeypatch, logger_class):
     _patch_comet_atexit(monkeypatch)
     try:
         _test_loggers_pickle(tmpdir, monkeypatch, logger_class)
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         pytest.xfail(f"pickle test requires {logger_class.__class__} dependencies to be installed.")
 
 
@@ -340,7 +340,7 @@ def test_logger_created_on_rank_zero_only(tmpdir, monkeypatch, logger_class):
     _patch_comet_atexit(monkeypatch)
     try:
         _test_logger_created_on_rank_zero_only(tmpdir, logger_class)
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         pytest.xfail(f"multi-process test requires {logger_class.__class__} dependencies to be installed.")
 
 

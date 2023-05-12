@@ -257,6 +257,7 @@ def test_eval_epoch_only_logging(tmpdir, batches, log_interval, max_epochs):
 @pytest.mark.parametrize('suffix', (False, True))
 def test_multi_dataloaders_add_suffix_properly(tmpdir, suffix):
 
+
     class TestModel(BoringModel):
 
         def test_step(self, batch, batch_idx, dataloader_idx=0):
@@ -289,7 +290,7 @@ def test_multi_dataloaders_add_suffix_properly(tmpdir, suffix):
     for i, r in enumerate(results):
         expected = {'test_loss', 'test_loss_epoch'}
         if suffix:
-            expected = {e + f'/dataloader_idx_{i}' for e in expected}
+            expected = {f'{e}/dataloader_idx_{i}' for e in expected}
         assert set(r) == expected
 
 
@@ -404,6 +405,8 @@ def test_log_works_in_test_callback(tmpdir):
     Tests that log can be called within callback
     """
 
+
+
     class TestCallback(callbacks.Callback):
 
         # helpers
@@ -440,18 +443,20 @@ def test_log_works_in_test_callback(tmpdir):
                     "func_name": func_name
                 }
                 if on_step and on_epoch:
-                    self.funcs_attr[f"{custom_func_name}_step" + num_dl_ext] = {
+                    self.funcs_attr[f"{custom_func_name}_step{num_dl_ext}"] = {
                         "on_step": True,
                         "on_epoch": False,
                         "prog_bar": prog_bar,
-                        "func_name": func_name
+                        "func_name": func_name,
                     }
 
-                    self.funcs_attr[f"{custom_func_name}_epoch" + num_dl_ext] = {
+                    self.funcs_attr[
+                        f"{custom_func_name}_epoch{num_dl_ext}"
+                    ] = {
                         "on_step": False,
                         "on_epoch": True,
                         "prog_bar": prog_bar,
-                        "func_name": func_name
+                        "func_name": func_name,
                     }
 
         def on_test_start(self, _, pl_module):
@@ -471,6 +476,7 @@ def test_log_works_in_test_callback(tmpdir):
             self.make_logging(
                 pl_module, 'on_test_epoch_end', on_steps=[False], on_epochs=[True], prob_bars=self.choices
             )
+
 
     num_dataloaders = 2
 

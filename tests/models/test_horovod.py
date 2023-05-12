@@ -267,7 +267,7 @@ def test_horovod_multi_optimizer(tmpdir):
         return set(list(model.parameters()))
 
     def get_optimizer_params(optimizer):
-        return set([p for group in optimizer.param_groups for p in group.get('params', [])])
+        return {p for group in optimizer.param_groups for p in group.get('params', [])}
 
     assert get_model_params(model.generator) != get_model_params(model.discriminator)
     assert get_model_params(model.generator) == get_optimizer_params(trainer.optimizers[0])

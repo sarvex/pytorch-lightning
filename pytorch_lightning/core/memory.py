@@ -287,8 +287,7 @@ class ModelSummary(object):
             ["Params", list(map(get_human_readable_count, self.param_nums))],
         ]
         if self._model.example_input_array is not None:
-            arrays.append(["In sizes", self.in_sizes])
-            arrays.append(["Out sizes", self.out_sizes])
+            arrays.extend((["In sizes", self.in_sizes], ["Out sizes", self.out_sizes]))
         total_parameters = self.total_parameters
         trainable_parameters = self.trainable_parameters
         model_size = self.model_size
@@ -334,9 +333,7 @@ def _format_summary_table(total_parameters: int, trainable_parameters: int, mode
     # Summary = header + divider + Rest of table
     summary = " | ".join(header) + "\n" + "-" * total_width
     for i in range(n_rows):
-        line = []
-        for c, l in zip(cols, col_widths):
-            line.append(s.format(str(c[1][i]), l))
+        line = [s.format(str(c[1][i]), l) for c, l in zip(cols, col_widths)]
         summary += "\n" + " | ".join(line)
     summary += "\n" + "-" * total_width
 
@@ -399,8 +396,10 @@ def get_gpu_memory_map() -> Dict[str, int]:
 
     # Convert lines into a dictionary
     gpu_memory = [float(x) for x in result.stdout.strip().split(os.linesep)]
-    gpu_memory_map = {f"gpu_id: {gpu_id}/memory.used (MB)": memory for gpu_id, memory in enumerate(gpu_memory)}
-    return gpu_memory_map
+    return {
+        f"gpu_id: {gpu_id}/memory.used (MB)": memory
+        for gpu_id, memory in enumerate(gpu_memory)
+    }
 
 
 def get_formatted_model_size(total_model_size: float) -> float:
@@ -439,10 +438,10 @@ def get_human_readable_count(number: int) -> str:
     num_groups = int(np.ceil(num_digits / 3))
     num_groups = min(num_groups, len(labels))  # don't abbreviate beyond trillions
     shift = -3 * (num_groups - 1)
-    number = number * (10**shift)
+    number *= 10**shift
     index = num_groups - 1
     if index < 1 or number >= 100:
-        return f"{int(number):,d} {labels[index]}"
+        return f"{number:,d} {labels[index]}"
 
     return f"{number:,.1f} {labels[index]}"
 

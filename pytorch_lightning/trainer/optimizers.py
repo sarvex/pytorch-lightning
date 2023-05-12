@@ -123,9 +123,9 @@ class TrainerOptimizersMixin(ABC):
         default_config = _get_default_scheduler_config()
         for scheduler in schedulers:
             if isinstance(scheduler, dict):
-                # check provided keys
-                extra_keys = [k for k in scheduler.keys() if k not in default_config.keys()]
-                if extra_keys:
+                if extra_keys := [
+                    k for k in scheduler.keys() if k not in default_config.keys()
+                ]:
                     rank_zero_warn(f'Found unsupported keys in the lr scheduler dict: {extra_keys}', RuntimeWarning)
                 if 'scheduler' not in scheduler:
                     raise MisconfigurationException(
@@ -138,9 +138,9 @@ class TrainerOptimizersMixin(ABC):
                     )
                 if is_manual_optimization:
                     invalid_keys = {'interval', 'frequency', 'reduce_on_plateau', 'monitor', 'strict'}
-                    keys_to_warn = [k for k in scheduler.keys() if k in invalid_keys]
-
-                    if keys_to_warn:
+                    if keys_to_warn := [
+                        k for k in scheduler.keys() if k in invalid_keys
+                    ]:
                         rank_zero_warn(
                             f'The lr scheduler dict contains the key(s) {keys_to_warn}, but the keys will be ignored.'
                             ' You need to call `lr_scheduler.step()` manually in manual optimization.',

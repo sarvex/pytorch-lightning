@@ -38,11 +38,8 @@ def has_len(dataloader: DataLoader) -> bool:
         if len(dataloader) == 0:
             raise ValueError('`Dataloader` returned 0 length. Please make sure that it returns at least 1 batch')
         has_len = True
-    except TypeError:
+    except (TypeError, NotImplementedError):
         has_len = False
-    except NotImplementedError:  # e.g. raised by torchtext if a batch_size_fn is used
-        has_len = False
-
     if has_len and has_iterable_dataset(dataloader):
         rank_zero_warn(
             'Your `IterableDataset` has `__len__` defined.'
@@ -56,7 +53,4 @@ def has_len(dataloader: DataLoader) -> bool:
 def get_len(dataloader: DataLoader) -> Union[int, float]:
     """ Return the length of the given DataLoader. If ``__len__`` method is not implemented, return float('inf'). """
 
-    if has_len(dataloader):
-        return len(dataloader)
-
-    return float('inf')
+    return len(dataloader) if has_len(dataloader) else float('inf')

@@ -36,7 +36,7 @@ class CheckpointConnector:
         self.resume_checkpoint_path = resume_from_checkpoint
         # used to validate checkpointing logic
         self.has_trained = False
-        self._loaded_checkpoint = dict()
+        self._loaded_checkpoint = {}
 
     @property
     def hpc_resume_path(self) -> Optional[str]:
@@ -77,7 +77,7 @@ class CheckpointConnector:
         if self.resume_checkpoint_path:
             rank_zero_info(f"Restored all states from the checkpoint file at {self.resume_checkpoint_path}")
         self.resume_checkpoint_path = None
-        self._loaded_checkpoint = dict()
+        self._loaded_checkpoint = {}
 
         # clear cache after restore
         torch.cuda.empty_cache()
@@ -257,7 +257,7 @@ class CheckpointConnector:
 
     def hpc_save(self, folderpath: str, logger):
         # make sure the checkpoint folder exists
-        folderpath = str(folderpath)  # because the tests pass a path object
+        folderpath = folderpath
         fs = get_filesystem(folderpath)
         fs.makedirs(folderpath, exist_ok=True)
 
@@ -339,17 +339,17 @@ class CheckpointConnector:
             checkpoint['callbacks'] = self.trainer.on_save_checkpoint(checkpoint)
 
             optimizer_states = []
-            for i, optimizer in enumerate(self.trainer.optimizers):
+            for optimizer in self.trainer.optimizers:
                 # Rely on accelerator to dump optimizer state
                 optimizer_state = self.trainer.accelerator.optimizer_state(optimizer)
                 optimizer_states.append(optimizer_state)
 
             checkpoint['optimizer_states'] = optimizer_states
 
-            # dump lr schedulers
-            lr_schedulers = []
-            for scheduler in self.trainer.lr_schedulers:
-                lr_schedulers.append(scheduler['scheduler'].state_dict())
+            lr_schedulers = [
+                scheduler['scheduler'].state_dict()
+                for scheduler in self.trainer.lr_schedulers
+            ]
             checkpoint['lr_schedulers'] = lr_schedulers
 
             self.trainer.precision_plugin.on_save_checkpoint(checkpoint)
@@ -402,7 +402,7 @@ class CheckpointConnector:
         # check corresponding file existence
         files = [os.path.basename(f["name"]) for f in fs.listdir(dir_path)]
         files = [x for x in files if name_key in x]
-        if len(files) == 0:
+        if not files:
             return None
 
         # extract suffix number

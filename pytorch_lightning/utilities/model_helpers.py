@@ -41,8 +41,8 @@ def is_overridden(
             parent = pl.LightningModule
         elif isinstance(instance, pl.LightningDataModule):
             parent = pl.LightningDataModule
-        if parent is None:
-            raise ValueError("Expected a parent")
+    if parent is None:
+        raise ValueError("Expected a parent")
 
     instance_attr = getattr(instance, method_name, None)
     # `Mock(wraps=...)` support

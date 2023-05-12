@@ -318,7 +318,7 @@ class ProgressBar(ProgressBarBase):
 
     def init_sanity_tqdm(self) -> tqdm:
         """ Override this to customize the tqdm bar for the validation sanity run. """
-        bar = tqdm(
+        return tqdm(
             desc='Validation sanity check',
             position=(2 * self.process_position),
             disable=self.is_disabled,
@@ -326,11 +326,10 @@ class ProgressBar(ProgressBarBase):
             dynamic_ncols=True,
             file=sys.stdout,
         )
-        return bar
 
     def init_train_tqdm(self) -> tqdm:
         """ Override this to customize the tqdm bar for training. """
-        bar = tqdm(
+        return tqdm(
             desc='Training',
             initial=self.train_batch_idx,
             position=(2 * self.process_position),
@@ -340,11 +339,10 @@ class ProgressBar(ProgressBarBase):
             file=sys.stdout,
             smoothing=0,
         )
-        return bar
 
     def init_predict_tqdm(self) -> tqdm:
         """ Override this to customize the tqdm bar for predicting. """
-        bar = tqdm(
+        return tqdm(
             desc='Predicting',
             initial=self.train_batch_idx,
             position=(2 * self.process_position),
@@ -354,33 +352,30 @@ class ProgressBar(ProgressBarBase):
             file=sys.stdout,
             smoothing=0,
         )
-        return bar
 
     def init_validation_tqdm(self) -> tqdm:
         """ Override this to customize the tqdm bar for validation. """
         # The main progress bar doesn't exist in `trainer.validate()`
         has_main_bar = self.main_progress_bar is not None
-        bar = tqdm(
+        return tqdm(
             desc='Validating',
             position=(2 * self.process_position + has_main_bar),
             disable=self.is_disabled,
             leave=False,
             dynamic_ncols=True,
-            file=sys.stdout
+            file=sys.stdout,
         )
-        return bar
 
     def init_test_tqdm(self) -> tqdm:
         """ Override this to customize the tqdm bar for testing. """
-        bar = tqdm(
+        return tqdm(
             desc="Testing",
             position=(2 * self.process_position),
             disable=self.is_disabled,
             leave=True,
             dynamic_ncols=True,
-            file=sys.stdout
+            file=sys.stdout,
         )
-        return bar
 
     def on_sanity_check_start(self, trainer, pl_module):
         super().on_sanity_check_start(trainer, pl_module)
@@ -504,9 +499,7 @@ class ProgressBar(ProgressBarBase):
 
 def convert_inf(x: Optional[Union[int, float]]) -> Optional[Union[int, float]]:
     """ The tqdm doesn't support inf/nan values. We have to convert it to None. """
-    if x is None or math.isinf(x) or math.isnan(x):
-        return None
-    return x
+    return None if x is None or math.isinf(x) or math.isnan(x) else x
 
 
 def reset(bar: tqdm, total: Optional[int] = None) -> None:

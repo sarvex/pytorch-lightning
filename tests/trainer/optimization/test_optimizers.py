@@ -252,11 +252,13 @@ def test_none_optimizer(tmpdir):
 def test_configure_optimizer_from_dict(tmpdir):
     """Tests if `configure_optimizer` method could return a dictionary with `optimizer` field only."""
 
+
+
     class TestModel(BoringModel):
 
         def configure_optimizers(self):
-            config = {'optimizer': optim.SGD(params=self.parameters(), lr=1e-03)}
-            return config
+            return {'optimizer': optim.SGD(params=self.parameters(), lr=1e-03)}
+
 
     model = TestModel()
     trainer = Trainer(
@@ -388,6 +390,8 @@ def test_multiple_optimizers_callbacks(tmpdir):
         def on_train_epoch_start(self, trainer, pl_module):
             pass
 
+
+
     class TestModel(BoringModel):
 
         def __init__(self):
@@ -396,13 +400,8 @@ def test_multiple_optimizers_callbacks(tmpdir):
             self.layer_2 = torch.nn.Linear(32, 2)
 
         def training_step(self, batch, batch_idx, optimizer_idx):
-            if optimizer_idx == 0:
-                a = batch[0]
-                acc = self.layer_1(a)
-            else:
-                a = batch[0]
-                acc = self.layer_2(a)
-
+            a = batch[0]
+            acc = self.layer_1(a) if optimizer_idx == 0 else self.layer_2(a)
             acc = self.loss(acc, acc)
             return acc
 
@@ -410,6 +409,7 @@ def test_multiple_optimizers_callbacks(tmpdir):
             a = optim.RMSprop(self.layer_1.parameters(), 1e-2)
             b = optim.RMSprop(self.layer_2.parameters(), 1e-2)
             return a, b
+
 
     model = TestModel()
     model.training_epoch_end = None

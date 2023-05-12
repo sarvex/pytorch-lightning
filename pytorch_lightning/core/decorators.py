@@ -94,7 +94,7 @@ def parameter_validation(fn: Callable) -> Callable:
         self.model.on_post_move_to_device()
         post_layer_count = len(list(self.model.parameters()))
 
-        if not pre_layer_count == post_layer_count:
+        if pre_layer_count != post_layer_count:
             rank_zero_warn(
                 f'The model layers do not match after moving to the target device.'
                 ' If your model employs weight sharing on TPU,'

@@ -66,13 +66,13 @@ class GradientAccumulationScheduler(Callback):
         if minimal_epoch < 0:
             raise IndexError(f"Epochs indexing from 1, epoch {minimal_epoch} cannot be interpreted correct")
         if minimal_epoch != 0:  # if user didnt define first epoch accumulation factor
-            scheduling.update({0: 1})
+            scheduling[0] = 1
 
         self.scheduling = scheduling
         self.epochs = sorted(scheduling.keys())
 
     def going_to_accumulate_grad_batches(self):
-        return any([v > 1 for v in self.scheduling.values()])
+        return any(v > 1 for v in self.scheduling.values())
 
     def on_train_epoch_start(self, trainer, pl_module):
         epoch = trainer.current_epoch

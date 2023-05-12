@@ -100,7 +100,7 @@ def test_prefetch_iterator():
 
     dataset = EmptyIterDataset()
     iterator = prefetch_iterator(dataset)
-    assert list(iterator) == []
+    assert not list(iterator)
 
 
 @pytest.mark.parametrize(
@@ -172,7 +172,7 @@ def test_combined_loader_dict_min_size():
 
     combined_loader = CombinedLoader(loaders, "min_size")
 
-    assert len(combined_loader) == min([len(v) for v in loaders.values()])
+    assert len(combined_loader) == min(len(v) for v in loaders.values())
 
     for idx, item in enumerate(combined_loader):
         assert isinstance(item, dict)
@@ -191,7 +191,7 @@ def test_combined_loader_dict_max_size_cycle():
 
     combined_loader = CombinedLoader(loaders, "max_size_cycle")
 
-    assert len(combined_loader) == max([len(v) for v in loaders.values()])
+    assert len(combined_loader) == max(len(v) for v in loaders.values())
 
     for idx, item in enumerate(combined_loader):
         assert isinstance(item, dict)
@@ -210,7 +210,7 @@ def test_combined_loader_sequence_min_size():
 
     combined_loader = CombinedLoader(loaders, "min_size")
 
-    assert len(combined_loader) == min([len(v) for v in loaders])
+    assert len(combined_loader) == min(len(v) for v in loaders)
 
     for idx, item in enumerate(combined_loader):
         assert isinstance(item, Sequence)
@@ -228,7 +228,7 @@ def test_combined_loader_sequence_max_size_cycle():
 
     combined_loader = CombinedLoader(loaders, "max_size_cycle")
 
-    assert len(combined_loader) == max([len(v) for v in loaders])
+    assert len(combined_loader) == max(len(v) for v in loaders)
 
     for idx, item in enumerate(combined_loader):
         assert isinstance(item, Sequence)

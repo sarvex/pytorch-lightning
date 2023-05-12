@@ -149,10 +149,10 @@ def test_overfit_batch_limits(tmpdir):
             assert loader_num_batches[0] == int(0.1 * len(val_loader))
 
             loader_num_batches, dataloaders = Trainer(limit_val_batches=10)._reset_eval_dataloader(model, split)
-            assert loader_num_batches[0] == 10
         else:
             loader_num_batches, dataloaders = Trainer(limit_test_batches=0.1)._reset_eval_dataloader(model, split)
             assert loader_num_batches[0] == int(0.1 * len(test_loader))
 
             loader_num_batches, dataloaders = Trainer(limit_test_batches=10)._reset_eval_dataloader(model, split)
-            assert loader_num_batches[0] == 10
+
+        assert loader_num_batches[0] == 10

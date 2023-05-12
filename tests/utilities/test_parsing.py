@@ -38,6 +38,7 @@ unpicklable_function = lambda: None
 @pytest.fixture(scope="module")
 def model_cases():
 
+
     class TestHparamsNamespace:
         learning_rate = 1
 
@@ -83,11 +84,14 @@ def model_cases():
 
     model6 = TestModel6()
 
-    TestHparamsDict2 = {'batch_size': 2}
+
 
     class TestModel7:  # test for datamodule w/ hparams w/ attribute (should use datamodule)
         trainer = Trainer
+        TestHparamsDict2 = {'batch_size': 2}
+
         hparams = TestHparamsDict2
+
 
     model7 = TestModel7()
 

@@ -54,7 +54,11 @@ PACKAGES_GPU_ONLY = ['horovod']
 for ex in ('cpu', 'cpu-extra'):
     kw = ex.split('-')[1] if '-' in ex else 'all'
     # filter cpu only packages
-    extras[ex] = [pkg for pkg in extras[kw] if not any(pgpu.lower() in pkg.lower() for pgpu in PACKAGES_GPU_ONLY)]
+    extras[ex] = [
+        pkg
+        for pkg in extras[kw]
+        if all(pgpu.lower() not in pkg.lower() for pgpu in PACKAGES_GPU_ONLY)
+    ]
 
 long_description = setup_tools._load_readme_description(
     _PATH_ROOT,

@@ -31,11 +31,9 @@ def str_to_bool_or_str(val: str) -> Union[str, bool]:
     are 'n', 'no', 'f', 'false', 'off', and '0'.
     """
     lower = val.lower()
-    if lower in ('y', 'yes', 't', 'true', 'on', '1'):
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
         return True
-    if lower in ('n', 'no', 'f', 'false', 'off', '0'):
-        return False
-    return val
+    return False if lower in {'n', 'no', 'f', 'false', 'off', '0'} else val
 
 
 def str_to_bool(val: str) -> bool:
@@ -142,7 +140,7 @@ def get_init_args(frame) -> dict:
     exclude_argnames = (*filtered_vars, '__class__', 'frame', 'frame_args')
     # only collect variables that appear in the signature
     local_args = {k: local_vars[k] for k in init_parameters.keys()}
-    local_args.update(local_args.get(kwargs_var, {}))
+    local_args |= local_args.get(kwargs_var, {})
     local_args = {k: v for k, v in local_args.items() if k not in exclude_argnames}
     return local_args
 
@@ -263,11 +261,10 @@ class AttributeDict(Dict):
     def __repr__(self):
         if not len(self):
             return ""
-        max_key_length = max([len(str(k)) for k in self])
+        max_key_length = max(len(str(k)) for k in self)
         tmp_name = '{:' + str(max_key_length + 3) + 's} {}'
         rows = [tmp_name.format(f'"{n}":', self[n]) for n in sorted(self.keys())]
-        out = '\n'.join(rows)
-        return out
+        return '\n'.join(rows)
 
 
 def _lightning_get_all_attr_holders(model, attribute):
@@ -284,9 +281,8 @@ def _lightning_get_all_attr_holders(model, attribute):
         holders.append(model)
 
     # Check if attribute in model.hparams, either namespace or dict
-    if hasattr(model, 'hparams'):
-        if attribute in model.hparams:
-            holders.append(model.hparams)
+    if hasattr(model, 'hparams') and attribute in model.hparams:
+        holders.append(model.hparams)
 
     # Check if the attribute in datamodule (datamodule gets registered in Trainer)
     if trainer is not None and trainer.datamodule is not None and hasattr(trainer.datamodule, attribute):
@@ -302,10 +298,7 @@ def _lightning_get_first_attr_holder(model, attribute):
     returns the last one that has it.
     """
     holders = _lightning_get_all_attr_holders(model, attribute)
-    if len(holders) == 0:
-        return None
-    # using the last holder to preserve backwards compatibility
-    return holders[-1]
+    return None if len(holders) == 0 else holders[-1]
 
 
 def lightning_hasattr(model, attribute):

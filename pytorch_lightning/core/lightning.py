@@ -112,7 +112,7 @@ class LightningModule(
         self._current_dataloader_idx: Optional[int] = None
         self._automatic_optimization: bool = True
         self._truncated_bptt_steps: int = 0
-        self._param_requires_grad_state = dict()
+        self._param_requires_grad_state = {}
         self._metric_attributes: Optional[Dict[int, str]] = None
 
     def optimizers(self, use_pl_optimizer: bool = True) -> Union[Optimizer, List[Optimizer], List[LightningOptimizer]]:
@@ -135,11 +135,7 @@ class LightningModule(
         lr_schedulers = [s["scheduler"] for s in self.trainer.lr_schedulers]
 
         # single scheduler
-        if len(lr_schedulers) == 1:
-            return lr_schedulers[0]
-
-        # multiple schedulers
-        return lr_schedulers
+        return lr_schedulers[0] if len(lr_schedulers) == 1 else lr_schedulers
 
     @property
     def example_input_array(self) -> Any:
@@ -1478,7 +1474,7 @@ class LightningModule(
                         if param in self._param_requires_grad_state:
                             param.requires_grad = self._param_requires_grad_state[param]
         # save memory
-        self._param_requires_grad_state = dict()
+        self._param_requires_grad_state = {}
 
     def optimizer_step(
         self,
@@ -1622,7 +1618,7 @@ class LightningModule(
 
         """
         time_dims = [len(x[0]) for x in batch if isinstance(x, (torch.Tensor, collections.Sequence))]
-        assert len(time_dims) >= 1, "Unable to determine batch time dimension"
+        assert time_dims, "Unable to determine batch time dimension"
         assert all(x == time_dims[0] for x in time_dims), "Batch time dimension length is ambiguous"
 
         splits = []
@@ -1764,7 +1760,7 @@ class LightningModule(
 
         # add all arguments from parents
         for args in frame_args[:-1]:
-            parents_arguments.update(args)
+            parents_arguments |= args
         return self_arguments, parents_arguments
 
     def save_hyperparameters(

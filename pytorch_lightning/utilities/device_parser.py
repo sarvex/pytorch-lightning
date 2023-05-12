@@ -45,12 +45,9 @@ def determine_root_gpu_device(gpus: List[int]) -> Optional[int]:
     if not isinstance(gpus, list):
         raise TypeError("gpus should be a list")
 
-    assert len(gpus) > 0, "gpus should be a non empty list"
+    assert gpus, "gpus should be a non empty list"
 
-    # set root gpu
-    root_gpu = gpus[0]
-
-    return root_gpu
+    return gpus[0]
 
 
 def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]],
@@ -199,10 +196,7 @@ def _normalize_parse_gpu_input_to_list(gpus: Union[int, List[int], Tuple[int, ..
     # must be an int
     if not gpus:  # gpus==0
         return None
-    if gpus == -1:
-        return _get_all_available_gpus()
-
-    return list(range(gpus))
+    return _get_all_available_gpus() if gpus == -1 else list(range(gpus))
 
 
 def _get_all_available_gpus() -> List[int]:
@@ -240,9 +234,7 @@ def _tpu_cores_valid(tpu_cores):
         has_1_tpu_idx = len(tpu_cores) == 1
         is_valid_tpu_idx = tpu_cores[0] in range(1, 9)
 
-        is_valid_tpu_core_choice = has_1_tpu_idx and is_valid_tpu_idx
-        return is_valid_tpu_core_choice
-
+        return has_1_tpu_idx and is_valid_tpu_idx
     return False
 
 

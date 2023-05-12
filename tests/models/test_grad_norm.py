@@ -53,7 +53,7 @@ class ModelWithManualGradTracker(BoringModel):
 
         # handle total norm
         norm = np.linalg.norm(norms, self.norm_type)
-        out[prefix + 'total'] = round(norm, 4)
+        out[f'{prefix}total'] = round(norm, 4)
         self.stored_grad_norms.append(out)
 
 
@@ -104,8 +104,9 @@ def test_grad_tracking_interval(tmpdir, log_every_n_steps):
         grad_norm_dicts = []
         for _, kwargs in mocked.call_args_list:
             metrics = kwargs.get("metrics", {})
-            grad_norm_dict = {k: v for k, v in metrics.items() if k.startswith("grad_")}
-            if grad_norm_dict:
+            if grad_norm_dict := {
+                k: v for k, v in metrics.items() if k.startswith("grad_")
+            }:
                 grad_norm_dicts.append(grad_norm_dict)
 
         # logging on n steps + 1 epochs

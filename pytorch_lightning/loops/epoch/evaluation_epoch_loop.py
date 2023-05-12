@@ -153,8 +153,7 @@ class EvaluationEpochLoop(Loop):
     def evaluation_step_end(self, *args: Any, **kwargs: Any) -> Optional[STEP_OUTPUT]:
         """Calls the `{validation/test}_step_end` hook"""
         hook_name = "test_step_end" if self.trainer.testing else "validation_step_end"
-        output = self.trainer.call_hook(hook_name, *args, **kwargs)
-        return output
+        return self.trainer.call_hook(hook_name, *args, **kwargs)
 
     def on_evaluation_batch_start(self, batch: Any, batch_idx: int, dataloader_idx: int) -> None:
         """Calls the ``on_{validation/test}_batch_start`` hook.
@@ -209,9 +208,13 @@ class EvaluationEpochLoop(Loop):
             dataloader_idx: the index of the dataloader producing the current batch
         """
         # Add step predictions to prediction collection to write later
-        if output is not None and self.predictions is not None:
-            if isinstance(output, ResultCollection) and self.trainer.testing:
-                self.predictions.add(output.pop("predictions", None))
+        if (
+            output is not None
+            and self.predictions is not None
+            and isinstance(output, ResultCollection)
+            and self.trainer.testing
+        ):
+            self.predictions.add(output.pop("predictions", None))
 
         # track debug metrics
         self.trainer.dev_debugger.track_eval_loss_history(batch_idx, dataloader_idx, output)

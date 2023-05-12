@@ -76,11 +76,10 @@ class LoggerConnector:
             )
         elif logger is False:
             self.trainer.logger = None
+        elif isinstance(logger, Iterable):
+            self.trainer.logger = LoggerCollection(logger)
         else:
-            if isinstance(logger, Iterable):
-                self.trainer.logger = LoggerCollection(logger)
-            else:
-                self.trainer.logger = logger
+            self.trainer.logger = logger
 
     def log_metrics(self, metrics: Dict[str, _METRIC], step: Optional[int] = None) -> None:
         """Logs the metric dict passed in.

@@ -477,7 +477,7 @@ def test_resume_from_checkpoint_epoch_restored(monkeypatch, tmpdir, tmpdir_serve
     if url_ckpt:
         # transform local paths into url checkpoints
         ip, port = tmpdir_server
-        checkpoints = [f"http://{ip}:{port}/" + ckpt.name for ckpt in checkpoints]
+        checkpoints = [f"http://{ip}:{port}/{ckpt.name}" for ckpt in checkpoints]
 
     for ckpt in checkpoints:
         next_model = TestModel()
@@ -646,6 +646,7 @@ def test_benchmark_option(tmpdir):
 @pytest.mark.parametrize("fn", ("validate", "test", "predict"))
 def test_tested_checkpoint_path(tmpdir, ckpt_path, save_top_k, fn):
 
+
     class TestModel(BoringModel):
 
         def validation_step(self, batch, batch_idx):
@@ -688,18 +689,16 @@ def test_tested_checkpoint_path(tmpdir, ckpt_path, save_top_k, fn):
         # use the weights from the end of training
         trainer_fn(ckpt_path=ckpt_path)
         assert getattr(trainer, path_attr) is None
+    elif save_top_k == 0:
+        with pytest.raises(FileNotFoundError):
+            trainer_fn(ckpt_path="random.ckpt")
     else:
-        # specific checkpoint, pick one from saved ones
-        if save_top_k == 0:
-            with pytest.raises(FileNotFoundError):
-                trainer_fn(ckpt_path="random.ckpt")
-        else:
-            ckpt_path = str(
-                list((Path(tmpdir) / f"lightning_logs/version_{trainer.logger.version}/checkpoints").iterdir()
-                     )[0].absolute()
-            )
-            trainer_fn(ckpt_path=ckpt_path)
-            assert getattr(trainer, path_attr) == ckpt_path
+        ckpt_path = str(
+            list((Path(tmpdir) / f"lightning_logs/version_{trainer.logger.version}/checkpoints").iterdir()
+                 )[0].absolute()
+        )
+        trainer_fn(ckpt_path=ckpt_path)
+        assert getattr(trainer, path_attr) == ckpt_path
 
 
 def test_disabled_training(tmpdir):
@@ -1709,7 +1708,7 @@ def test_train_loop_system(tmpdir):
     trainer = Trainer(**trainer_options)
 
     # No methods are called yet.
-    assert called_methods == []
+    assert not called_methods
 
     trainer.fit(model)
     assert called_methods == [
@@ -1723,7 +1722,7 @@ def test_train_loop_system(tmpdir):
     trainer = Trainer(**trainer_options, accumulate_grad_batches=3)
 
     # No methods are called yet.
-    assert called_methods == []
+    assert not called_methods
 
     trainer.fit(model)
     assert called_methods == [

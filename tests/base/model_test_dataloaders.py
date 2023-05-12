@@ -33,5 +33,4 @@ class TestDataloaderVariations(ABC):
 
     def test_dataloader__multiple_mixed_length(self):
         lengths = [50, 30, 40]
-        dataloaders = [self.dataloader(train=False, num_samples=n) for n in lengths]
-        return dataloaders
+        return [self.dataloader(train=False, num_samples=n) for n in lengths]

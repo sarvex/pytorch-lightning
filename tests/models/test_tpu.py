@@ -365,7 +365,7 @@ def test_tpu_reduce():
         # faster this way
         reduce_ops = ["mean", "AVG", "undefined", "sum", ReduceOp.SUM, ReduceOp.MAX]
         for reduce_op in reduce_ops:
-            if reduce_op == "undefined" or reduce_op == ReduceOp.MAX:
+            if reduce_op in ["undefined", ReduceOp.MAX]:
                 with pytest.raises(MisconfigurationException, match="TPUSpawn TrainingTypePlugin only support"):
                     result = trainer.training_type_plugin.reduce(1, reduce_op)
             else:

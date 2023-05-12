@@ -65,8 +65,7 @@ class DDP2Plugin(DDPPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=self.num_nodes, rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(num_replicas=self.num_nodes, rank=self.global_rank)
 
     @property
     def _is_single_process_single_device(self) -> bool:

@@ -70,8 +70,7 @@ class UNet(nn.Module):
     def forward(self, x):
         xi = [self.layers[0](x)]
         # Down path
-        for layer in self.layers[1:self.num_layers]:
-            xi.append(layer(xi[-1]))
+        xi.extend(layer(xi[-1]) for layer in self.layers[1:self.num_layers])
         # Up path
         for i, layer in enumerate(self.layers[self.num_layers:-1]):
             xi[-1] = layer(xi[-1], xi[-2 - i])

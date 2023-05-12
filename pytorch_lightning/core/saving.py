@@ -154,8 +154,7 @@ class ModelIO(object):
         # override the hparams with values that were passed in
         checkpoint[cls.CHECKPOINT_HYPER_PARAMS_KEY].update(kwargs)
 
-        model = cls._load_model_state(checkpoint, strict=strict, **kwargs)
-        return model
+        return cls._load_model_state(checkpoint, strict=strict, **kwargs)
 
     @classmethod
     def _load_model_state(cls, checkpoint: Dict[str, Any], strict: bool = True, **cls_kwargs_new):
@@ -172,7 +171,7 @@ class ModelIO(object):
 
             # 1. (backward compatibility) Try to restore model hparams from checkpoint using old/past keys
             for _old_hparam_key in CHECKPOINT_PAST_HPARAMS_KEYS:
-                cls_kwargs_loaded.update(checkpoint.get(_old_hparam_key, {}))
+                cls_kwargs_loaded |= checkpoint.get(_old_hparam_key, {})
 
             # 2. Try to restore model hparams from checkpoint using the new key
             _new_hparam_key = cls.CHECKPOINT_HYPER_PARAMS_KEY
@@ -189,7 +188,7 @@ class ModelIO(object):
                 cls_kwargs_loaded = {args_name: cls_kwargs_loaded}
 
         _cls_kwargs = {}
-        _cls_kwargs.update(cls_kwargs_loaded)
+        _cls_kwargs |= cls_kwargs_loaded
         _cls_kwargs.update(cls_kwargs_new)
 
         if not cls_spec.varkw:
@@ -286,7 +285,7 @@ def update_hparams(hparams: dict, updates: dict) -> None:
             update_hparams(hparams[k], updates[k])
         else:
             # update the value
-            hparams.update({k: v})
+            hparams[k] = v
 
 
 def load_hparams_from_tags_csv(tags_csv: str) -> Dict[str, Any]:
@@ -352,12 +351,11 @@ def load_hparams_from_yaml(config_yaml: str, use_omegaconf: bool = True) -> Dict
     with fs.open(config_yaml, "r") as fp:
         hparams = yaml.load(fp, Loader=yaml.UnsafeLoader)
 
-    if _OMEGACONF_AVAILABLE:
-        if use_omegaconf:
-            try:
-                return OmegaConf.create(hparams)
-            except (UnsupportedValueType, ValidationError):
-                pass
+    if _OMEGACONF_AVAILABLE and use_omegaconf:
+        try:
+            return OmegaConf.create(hparams)
+        except (UnsupportedValueType, ValidationError):
+            pass
     return hparams
 
 

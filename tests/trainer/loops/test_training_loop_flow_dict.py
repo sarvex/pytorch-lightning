@@ -104,6 +104,8 @@ def test__training_step__epoch_end__flow_dict(tmpdir):
     Tests that only training_step can be used
     """
 
+
+
     class TestModel(DeterministicModel):
 
         def training_step(self, batch, batch_idx):
@@ -111,8 +113,7 @@ def test__training_step__epoch_end__flow_dict(tmpdir):
             acc = acc + batch_idx
 
             self.training_step_called = True
-            out = {'loss': acc, 'random_things': [1, 'a', torch.tensor(2)]}
-            return out
+            return {'loss': acc, 'random_things': [1, 'a', torch.tensor(2)]}
 
         def training_epoch_end(self, outputs):
             self.training_epoch_end_called = True
@@ -127,6 +128,7 @@ def test__training_step__epoch_end__flow_dict(tmpdir):
 
         def backward(self, loss, optimizer, optimizer_idx):
             return LightningModule.backward(self, loss, optimizer, optimizer_idx)
+
 
     model = TestModel()
     model.val_dataloader = None

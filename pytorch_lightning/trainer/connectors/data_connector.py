@@ -43,10 +43,9 @@ class DataConnector:
         self.trainer._is_data_prepared = False
 
     def get_profiled_train_dataloader(self, train_dataloader):
-        profiled_dl = self.trainer.profiler.profile_iterable(
+        return self.trainer.profiler.profile_iterable(
             enumerate(prefetch_iterator(train_dataloader)), "get_train_batch"
         )
-        return profiled_dl
 
     def prepare_data(self, model):
         # on multi-gpu jobs we only want to manipulate (download, etc) on node_rank=0, local_rank=0

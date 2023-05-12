@@ -227,7 +227,7 @@ def test_init_from_argparse_args(cli_args, extra_args):
     with mock.patch('pytorch_lightning.Trainer.__init__', autospec=True, return_value=None) as init:
         trainer = Trainer.from_argparse_args(Namespace(**cli_args, **unknown_args), **extra_args)
         expected = dict(cli_args)
-        expected.update(extra_args)  # extra args should override any cli arg
+        expected |= extra_args
         init.assert_called_with(trainer, **expected)
 
     # passing in unknown manual args should throw an error

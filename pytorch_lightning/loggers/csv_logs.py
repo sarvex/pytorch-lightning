@@ -71,9 +71,7 @@ class ExperimentWriter(object):
         """Record metrics"""
 
         def _handle_value(value):
-            if isinstance(value, torch.Tensor):
-                return value.item()
-            return value
+            return value.item() if isinstance(value, torch.Tensor) else value
 
         if step is None:
             step = len(self.metrics)
@@ -92,7 +90,7 @@ class ExperimentWriter(object):
 
         last_m = {}
         for m in self.metrics:
-            last_m.update(m)
+            last_m |= m
         metrics_keys = list(last_m.keys())
 
         with io.open(self.metrics_file_path, 'w', newline='') as f:
@@ -144,9 +142,7 @@ class CSVLogger(LightningLoggerBase):
         If the experiment name parameter is ``None`` or the empty string, no experiment subdirectory is used
         and the checkpoint will be saved in "save_dir/version_dir"
         """
-        if not self.name:
-            return self.save_dir
-        return os.path.join(self.save_dir, self.name)
+        return os.path.join(self.save_dir, self.name) if self.name else self.save_dir
 
     @property
     def log_dir(self) -> str:
@@ -157,8 +153,7 @@ class CSVLogger(LightningLoggerBase):
         """
         # create a pseudo standard path ala test-tube
         version = self.version if isinstance(self.version, str) else f"version_{self.version}"
-        log_dir = os.path.join(self.root_dir, version)
-        return log_dir
+        return os.path.join(self.root_dir, version)
 
     @property
     def save_dir(self) -> Optional[str]:
@@ -220,12 +215,10 @@ class CSVLogger(LightningLoggerBase):
             log.warning('Missing logger folder: %s', root_dir)
             return 0
 
-        existing_versions = []
-        for d in os.listdir(root_dir):
-            if os.path.isdir(os.path.join(root_dir, d)) and d.startswith("version_"):
-                existing_versions.append(int(d.split("_")[1]))
-
-        if len(existing_versions) == 0:
-            return 0
-
-        return max(existing_versions) + 1
+        existing_versions = [
+            int(d.split("_")[1])
+            for d in os.listdir(root_dir)
+            if os.path.isdir(os.path.join(root_dir, d))
+            and d.startswith("version_")
+        ]
+        return 0 if not existing_versions else max(existing_versions) + 1

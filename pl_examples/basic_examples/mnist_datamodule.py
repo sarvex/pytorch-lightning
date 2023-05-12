@@ -97,7 +97,7 @@ class MNISTDataModule(LightningDataModule):
 
     def train_dataloader(self):
         """MNIST train set removes a subset to use for validation"""
-        loader = DataLoader(
+        return DataLoader(
             self.dataset_train,
             batch_size=self.batch_size,
             shuffle=True,
@@ -105,11 +105,10 @@ class MNISTDataModule(LightningDataModule):
             drop_last=True,
             pin_memory=True,
         )
-        return loader
 
     def val_dataloader(self):
         """MNIST val set uses a subset of the training set for validation"""
-        loader = DataLoader(
+        return DataLoader(
             self.dataset_val,
             batch_size=self.batch_size,
             shuffle=False,
@@ -117,13 +116,12 @@ class MNISTDataModule(LightningDataModule):
             drop_last=True,
             pin_memory=True,
         )
-        return loader
 
     def test_dataloader(self):
         """MNIST test set uses the test split"""
         extra = dict(transform=self.test_transforms) if self.test_transforms else {}
         dataset = MNIST(self.data_dir, train=False, download=False, **extra)
-        loader = DataLoader(
+        return DataLoader(
             dataset,
             batch_size=self.batch_size,
             shuffle=False,
@@ -131,17 +129,18 @@ class MNISTDataModule(LightningDataModule):
             drop_last=True,
             pin_memory=True,
         )
-        return loader
 
     @property
     def default_transforms(self):
         if not _TORCHVISION_AVAILABLE:
             return None
-        if self.normalize:
-            mnist_transforms = transform_lib.Compose([
-                transform_lib.ToTensor(), transform_lib.Normalize(mean=(0.5, ), std=(0.5, ))
-            ])
-        else:
-            mnist_transforms = transform_lib.ToTensor()
-
-        return mnist_transforms
+        return (
+            transform_lib.Compose(
+                [
+                    transform_lib.ToTensor(),
+                    transform_lib.Normalize(mean=(0.5,), std=(0.5,)),
+                ]
+            )
+            if self.normalize
+            else transform_lib.ToTensor()
+        )

@@ -101,6 +101,8 @@ def test_finetuning_callback_warning(tmpdir):
 
     seed_everything(42)
 
+
+
     class FinetuningBoringModel(BoringModel):
 
         def __init__(self):
@@ -123,8 +125,8 @@ def test_finetuning_callback_warning(tmpdir):
             return DataLoader(RandomDataset(32, 64), batch_size=2)
 
         def configure_optimizers(self):
-            optimizer = torch.optim.SGD(self.parameters(), lr=0.1)
-            return optimizer
+            return torch.optim.SGD(self.parameters(), lr=0.1)
+
 
     chk = ModelCheckpoint(dirpath=tmpdir, save_last=True)
 
@@ -221,7 +223,7 @@ def test_unfreeze_and_add_param_group_function(tmpdir):
     for group_idx, group in enumerate(optimizer.param_groups):
         if group_idx == 0:
             assert torch.equal(optimizer.param_groups[0]["params"][0], model.backbone[0].weight)
-        if group_idx == 2:
+        elif group_idx == 2:
             assert torch.equal(optimizer.param_groups[2]["params"][0], model.backbone[2].weight)
             assert torch.equal(optimizer.param_groups[2]["params"][1], model.backbone[3].weight)
             assert torch.equal(optimizer.param_groups[2]["params"][2], model.backbone[4].weight)

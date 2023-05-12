@@ -130,8 +130,10 @@ class DDPSpawnPlugin(ParallelPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        distributed_sampler_kwargs = dict(num_replicas=(self.num_nodes * self.num_processes), rank=self.global_rank)
-        return distributed_sampler_kwargs
+        return dict(
+            num_replicas=(self.num_nodes * self.num_processes),
+            rank=self.global_rank,
+        )
 
     @property
     def _is_single_process_single_device(self):
@@ -277,9 +279,7 @@ class DDPSpawnPlugin(ParallelPlugin):
             )
 
     def determine_ddp_device_ids(self):
-        if self.root_device.type == "cpu":
-            return None
-        return [self.root_device.index]
+        return None if self.root_device.type == "cpu" else [self.root_device.index]
 
     def transfer_distrib_spawn_state_on_fit_end(self, results):
         checkpoint_callback = self.lightning_module.trainer.checkpoint_callback

@@ -323,9 +323,7 @@ class AcceleratorConnector(object):
     @property
     def num_gpus(self) -> int:
         gpus = self.parallel_device_ids
-        if gpus is None:
-            return 0
-        return len(gpus)
+        return 0 if gpus is None else len(gpus)
 
     @property
     def parallel_devices(self) -> List[Union[torch.device, int]]:
@@ -392,13 +390,12 @@ class AcceleratorConnector(object):
                     )
                 elif not _NATIVE_AMP_AVAILABLE:
                     msg = "You have asked for native AMP but your PyTorch version does not support it." \
-                          " Consider upgrading with `pip install torch>=1.6`."
-                    if _APEX_AVAILABLE:
-                        self.amp_type = AMPType.APEX
-                        msg += " We will attempt to use NVIDIA Apex for this session."
-                        rank_zero_warn(msg)
-                    else:
+                              " Consider upgrading with `pip install torch>=1.6`."
+                    if not _APEX_AVAILABLE:
                         raise MisconfigurationException(msg)
+                    self.amp_type = AMPType.APEX
+                    msg += " We will attempt to use NVIDIA Apex for this session."
+                    rank_zero_warn(msg)
                 else:
                     log.info("Using native 16bit precision.")
                     if self._is_sharded_training_type:
@@ -427,15 +424,16 @@ class AcceleratorConnector(object):
         if isinstance(
             self.distributed_backend, Accelerator
         ) and self.distributed_backend.training_type_plugin is not None:
-            plugin = self.distributed_backend.training_type_plugin
+            return self.distributed_backend.training_type_plugin
         elif self.use_ddp2:
-            plugin = DDP2Plugin(
+            return DDP2Plugin(
                 parallel_devices=self.parallel_devices,
                 cluster_environment=self.cluster_environment,
             )
         elif self.use_ddp and self.use_deepspeed:
-            plugin = DeepSpeedPlugin(
-                cluster_environment=self.select_cluster_environment(), parallel_devices=self.parallel_devices
+            return DeepSpeedPlugin(
+                cluster_environment=self.select_cluster_environment(),
+                parallel_devices=self.parallel_devices,
             )
         elif self.use_ddp:
             use_slurm_ddp = self.use_ddp and self.is_slurm_managing_tasks
@@ -474,22 +472,25 @@ class AcceleratorConnector(object):
             else:
                 ddp_plugin_cls = DDPPlugin
 
-            plugin = ddp_plugin_cls(
+            return ddp_plugin_cls(
                 parallel_devices=self.parallel_devices,
                 cluster_environment=self.cluster_environment,
             )
         elif self.use_dp:
-            plugin = DataParallelPlugin(parallel_devices=self.parallel_devices)
+            return DataParallelPlugin(parallel_devices=self.parallel_devices)
         elif self.use_horovod:
-            plugin = HorovodPlugin(parallel_devices=self.parallel_devices)
+            return HorovodPlugin(parallel_devices=self.parallel_devices)
         elif self.on_tpu and isinstance(self.tpu_cores, list):
-            plugin = SingleTPUPlugin(self.tpu_id)
+            return SingleTPUPlugin(self.tpu_id)
         elif self.on_ipu:
-            plugin = IPUPlugin(parallel_devices=self.parallel_devices)
+            return IPUPlugin(parallel_devices=self.parallel_devices)
         else:
             single_gpu_ordinal = device_parser.determine_root_gpu_device(self.parallel_device_ids)
-            plugin = SingleDevicePlugin(device=torch.device(f"cuda:{single_gpu_ordinal}" if self.on_gpu else "cpu"))
-        return plugin
+            return SingleDevicePlugin(
+                device=torch.device(
+                    f"cuda:{single_gpu_ordinal}" if self.on_gpu else "cpu"
+                )
+            )
 
     def resolve_training_type_plugin(self, training_type: TrainingTypePlugin) -> TrainingTypePlugin:
         # necessary for when the user has passed in a plugin
@@ -548,14 +549,13 @@ class AcceleratorConnector(object):
         if self._cluster_environment is not None:
             return self._cluster_environment
         if self.is_slurm_managing_tasks:
-            env = SLURMEnvironment()
+            return SLURMEnvironment()
         elif TorchElasticEnvironment.is_using_torchelastic():
-            env = TorchElasticEnvironment()
+            return TorchElasticEnvironment()
         elif KubeflowEnvironment.is_using_kubeflow():
-            env = KubeflowEnvironment()
+            return KubeflowEnvironment()
         else:
-            env = LightningEnvironment()
-        return env
+            return LightningEnvironment()
 
     def set_distributed_mode(self, distributed_backend: Optional[str] = None):
 

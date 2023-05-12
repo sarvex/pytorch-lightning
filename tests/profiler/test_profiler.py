@@ -34,7 +34,7 @@ PROFILER_OVERHEAD_MAX_TOLERANCE = 0.0005
 
 
 def _get_python_cprofile_total_duration(profile):
-    return sum([x.inlinetime for x in profile.getstats()])
+    return sum(x.inlinetime for x in profile.getstats())
 
 
 def _sleep_generator(durations):

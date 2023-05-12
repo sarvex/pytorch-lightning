@@ -189,8 +189,9 @@ class TrainerDataLoadingMixin(ABC):
         multiprocessing_context = dataloader.multiprocessing_context
         dl_args['multiprocessing_context'] = multiprocessing_context
 
-        missing_kwargs = params.difference(skip_signature_keys).difference(dl_args)
-        if missing_kwargs:
+        if missing_kwargs := params.difference(skip_signature_keys).difference(
+            dl_args
+        ):
             """
             Example:
             class CustomDataLoader(DataLoader):
@@ -223,8 +224,7 @@ class TrainerDataLoadingMixin(ABC):
         if _TORCH_GREATER_EQUAL_1_6:
             kwargs.setdefault("seed", int(os.getenv("PL_GLOBAL_SEED", 0)))
         cls = UnrepeatedDistributedSampler if mode == RunningStage.PREDICTING else DistributedSampler
-        sampler = cls(dataloader.dataset, **kwargs)
-        return sampler
+        return cls(dataloader.dataset, **kwargs)
 
     def reset_train_dataloader(self, model: 'pl.LightningModule') -> None:
         """Resets the train dataloader and initialises required variables
@@ -235,15 +235,18 @@ class TrainerDataLoadingMixin(ABC):
         """
         self.train_dataloader = self.request_dataloader(model, "train")
 
-        if self.overfit_batches > 0:
-            if hasattr(self.train_dataloader, 'sampler') and isinstance(self.train_dataloader.sampler, RandomSampler):
-                rank_zero_warn(
-                    'You requested to overfit but enabled training dataloader shuffling.'
-                    ' We are turning off the training dataloader shuffling for you.'
-                )
-                self.train_dataloader = self.replace_sampler(
-                    self.train_dataloader, SequentialSampler(self.train_dataloader.dataset)
-                )
+        if (
+            self.overfit_batches > 0
+            and hasattr(self.train_dataloader, 'sampler')
+            and isinstance(self.train_dataloader.sampler, RandomSampler)
+        ):
+            rank_zero_warn(
+                'You requested to overfit but enabled training dataloader shuffling.'
+                ' We are turning off the training dataloader shuffling for you.'
+            )
+            self.train_dataloader = self.replace_sampler(
+                self.train_dataloader, SequentialSampler(self.train_dataloader.dataset)
+            )
 
         # debugging
         self.dev_debugger.track_load_dataloader_call('train_dataloader', dataloaders=[self.train_dataloader])
@@ -289,20 +292,18 @@ class TrainerDataLoadingMixin(ABC):
                     f'to the number of the training batches ({self.num_training_batches}). '
                     'If you want to disable validation set `limit_val_batches` to 0.0 instead.'
                 )
-        else:
-            if not has_len(self.train_dataloader):
-                if self.val_check_interval == 1.0:
-                    self.val_check_batch = float('inf')
-                else:
-                    raise MisconfigurationException(
-                        'When using an IterableDataset for `train_dataloader`,'
-                        ' `Trainer(val_check_interval)` must be `1.0` or an int. An int k specifies'
-                        ' checking validation every k training batches.'
-                    )
-            else:
-                self.val_check_batch = int(self.num_training_batches * self.val_check_interval)
-                self.val_check_batch = max(1, self.val_check_batch)
+        elif has_len(self.train_dataloader):
+            self.val_check_batch = int(self.num_training_batches * self.val_check_interval)
+            self.val_check_batch = max(1, self.val_check_batch)
 
+        elif self.val_check_interval == 1.0:
+            self.val_check_batch = float('inf')
+        else:
+            raise MisconfigurationException(
+                'When using an IterableDataset for `train_dataloader`,'
+                ' `Trainer(val_check_interval)` must be `1.0` or an int. An int k specifies'
+                ' checking validation every k training batches.'
+            )
         if self.logger and self.num_training_batches < self.log_every_n_steps:
             rank_zero_warn(
                 f"The number of training samples ({self.num_training_batches}) is smaller than the logging interval"
@@ -361,7 +362,7 @@ class TrainerDataLoadingMixin(ABC):
                         ' this off for val/test/predict dataloaders.'
                     )
 
-        if any([dl is None for dl in dataloaders]):
+        if any(dl is None for dl in dataloaders):
             rank_zero_warn("One of given dataloaders is None and it will be skipped.")
 
         # add samplers
@@ -440,8 +441,7 @@ class TrainerDataLoadingMixin(ABC):
         Args:
             model: The current `LightningModule`
         """
-        has_loader = is_overridden('predict_dataloader', model)
-        if has_loader:
+        if has_loader := is_overridden('predict_dataloader', model):
             self.num_predict_batches, self.predict_dataloaders = self._reset_eval_dataloader(model, 'predict')
 
     def reset_train_val_dataloaders(self, model) -> None:

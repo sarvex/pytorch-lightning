@@ -200,11 +200,13 @@ def test_swa_raises():
 def test_trainer_and_stochastic_weight_avg(tmpdir, use_callbacks: bool, stochastic_weight_avg: bool):
     """Test to ensure SWA Callback is injected when `stochastic_weight_avg` is provided to the Trainer"""
 
+
+
     class TestModel(BoringModel):
 
         def configure_optimizers(self):
-            optimizer = torch.optim.SGD(self.layer.parameters(), lr=0.1)
-            return optimizer
+            return torch.optim.SGD(self.layer.parameters(), lr=0.1)
+
 
     model = TestModel()
     trainer = Trainer(

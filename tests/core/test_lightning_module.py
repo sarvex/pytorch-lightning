@@ -123,6 +123,9 @@ def test_params_groups_and_state_are_accessible(tmpdir):
 
 def test_toggle_untoggle_2_optimizers_no_shared_parameters(tmpdir):
 
+
+
+
     class TestModel(BoringModel):
 
         def training_step(self, batch, batch_idx, optimizer_idx=None):
@@ -160,16 +163,16 @@ def test_toggle_untoggle_2_optimizers_no_shared_parameters(tmpdir):
             return [optimizer, optimizer_2]
 
         def optimizer_step(
-            self,
-            current_epoch,
-            batch_nb,
-            optimizer,
-            optimizer_idx,
-            closure,
-            on_tpu=False,
-            using_native_amp=False,
-            using_lbfgs=False
-        ):
+                    self,
+                    current_epoch,
+                    batch_nb,
+                    optimizer,
+                    optimizer_idx,
+                    closure,
+                    on_tpu=False,
+                    using_native_amp=False,
+                    using_lbfgs=False
+                ):
             if optimizer_idx == 0:
                 assert self.layer_1[0].weight.requires_grad is True
                 assert self.layer_1[2].weight.requires_grad is False
@@ -179,7 +182,7 @@ def test_toggle_untoggle_2_optimizers_no_shared_parameters(tmpdir):
                 assert self.layer_2[3].weight.requires_grad is False
                 assert self.layer_2[5].weight.requires_grad is False
 
-            if optimizer_idx == 1:
+            elif optimizer_idx == 1:
                 assert self.layer_1[0].weight.requires_grad is False
                 assert self.layer_1[2].weight.requires_grad is False
                 assert self.layer_1[4].weight.requires_grad is False
@@ -189,6 +192,7 @@ def test_toggle_untoggle_2_optimizers_no_shared_parameters(tmpdir):
                 assert self.layer_2[5].weight.requires_grad is True
 
             optimizer.step(closure=closure)
+
 
     model = TestModel()
     model.training_epoch_end = None
@@ -204,6 +208,9 @@ def test_toggle_untoggle_2_optimizers_no_shared_parameters(tmpdir):
 
 
 def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
+
+
+
 
     class TestModel(BoringModel):
 
@@ -246,16 +253,16 @@ def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
             self.layer_3[5].weight.requires_grad = False
 
         def optimizer_step(
-            self,
-            current_epoch,
-            batch_nb,
-            optimizer,
-            optimizer_idx,
-            closure,
-            on_tpu=False,
-            using_native_amp=False,
-            using_lbfgs=False
-        ):
+                    self,
+                    current_epoch,
+                    batch_nb,
+                    optimizer,
+                    optimizer_idx,
+                    closure,
+                    on_tpu=False,
+                    using_native_amp=False,
+                    using_lbfgs=False
+                ):
             if optimizer_idx == 0:
                 assert self.layer_1[0].weight.requires_grad is True
                 assert self.layer_1[2].weight.requires_grad is False
@@ -269,7 +276,7 @@ def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
                 assert self.layer_3[3].weight.requires_grad is False
                 assert self.layer_3[5].weight.requires_grad is False
 
-            if optimizer_idx == 1:
+            elif optimizer_idx == 1:
                 assert self.layer_1[0].weight.requires_grad is False
                 assert self.layer_1[2].weight.requires_grad is False
                 assert self.layer_1[4].weight.requires_grad is False
@@ -282,7 +289,7 @@ def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
                 assert self.layer_3[3].weight.requires_grad is True
                 assert self.layer_3[5].weight.requires_grad is False
 
-            if optimizer_idx == 2:
+            elif optimizer_idx == 2:
                 assert self.layer_1[0].weight.requires_grad is True
                 assert self.layer_1[2].weight.requires_grad is False
                 assert self.layer_1[4].weight.requires_grad is False
@@ -304,10 +311,8 @@ def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
 
         @staticmethod
         def combine_generators(gen_1, gen_2):
-            for p in gen_1:
-                yield p
-            for p in gen_2:
-                yield p
+            yield from gen_1
+            yield from gen_2
 
         def configure_optimizers(self):
             optimizer_1 = SGD(self.combine_generators(
@@ -323,6 +328,7 @@ def test_toggle_untoggle_3_optimizers_shared_parameters(tmpdir):
                 self.layer_1.parameters(),
             ), lr=0.1)
             return [optimizer_1, optimizer_2, optimizer_3]
+
 
     model = TestModel()
     model.training_epoch_end = None

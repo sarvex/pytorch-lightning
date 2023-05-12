@@ -19,9 +19,7 @@ def _rank_not_in_group(group):
     """
     Helper that checks if the current process's rank is not in a given group.
     """
-    if group is None:
-        return False
-    return group == GroupMember.NON_GROUP_MEMBER
+    return False if group is None else group == GroupMember.NON_GROUP_MEMBER
 
 
 # Taken from https://github.com/pytorch/pytorch/blob/1.7/torch/distributed/distributed_c10d.py#L1164
@@ -36,8 +34,7 @@ def _object_to_tensor(obj):
 # Taken from https://github.com/pytorch/pytorch/blob/1.7/torch/distributed/distributed_c10d.py
 def _tensor_to_object(tensor, tensor_size):
     buf = tensor.numpy().tobytes()[:tensor_size]
-    out = pickle.loads(buf)
-    return out
+    return pickle.loads(buf)
 
 
 # Taken from https://github.com/pytorch/pytorch/blob/1.7/torch/distributed/distributed_c10d.py#L1327
@@ -78,9 +75,9 @@ def _broadcast_object_list(object_list, src=0, group=None):
 
     broadcast(object_tensor, src=src, group=group)
 
-    # Deserialize objects using their stored sizes.
-    offset = 0
     if my_rank != src:
+        # Deserialize objects using their stored sizes.
+        offset = 0
         for i, obj_size in enumerate(object_sizes_tensor):
             obj_view = object_tensor[offset:offset + obj_size]
             obj_view = obj_view.type(torch.ByteTensor)  # type: ignore[call-overload]

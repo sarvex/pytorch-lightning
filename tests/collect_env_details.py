@@ -39,9 +39,7 @@ def run_and_parse_first_match(run_lambda, command, regex):
     if rc != 0:
         return None
     match = re.search(regex, out)
-    if match is None:
-        return None
-    return match.group(1)
+    return None if match is None else match[1]
 
 
 def get_running_cuda_version(run_lambda):

@@ -84,9 +84,7 @@ class ApexMixedPrecisionPlugin(MixedPrecisionPlugin):
         else:
             closure_loss.backward(*args, **kwargs)
 
-        # exit amp context
-        error = scaled_loss.__exit__(None, None, None)
-        if error:
+        if error := scaled_loss.__exit__(None, None, None):
             raise Exception("apex unscale error")
 
         # once backward has been applied, release graph

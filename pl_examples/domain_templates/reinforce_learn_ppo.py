@@ -45,15 +45,13 @@ def create_mlp(input_shape: Tuple[int], n_actions: int, hidden_size: int = 128):
     """
     Simple Multi-Layer Perceptron network
     """
-    network = nn.Sequential(
+    return nn.Sequential(
         nn.Linear(input_shape[0], hidden_size),
         nn.ReLU(),
         nn.Linear(hidden_size, hidden_size),
         nn.ReLU(),
         nn.Linear(hidden_size, n_actions),
     )
-
-    return network
 
 
 class ActorCategorical(nn.Module):
@@ -145,8 +143,7 @@ class ExperienceSourceDataset(IterableDataset):
         self.generate_batch = generate_batch
 
     def __iter__(self) -> Iterator:
-        iterator = self.generate_batch()
-        return iterator
+        return self.generate_batch()
 
 
 class PPOLightning(pl.LightningModule):
@@ -285,9 +282,7 @@ class PPOLightning(pl.LightningModule):
         vals = values + [last_value]
         # GAE
         delta = [rews[i] + self.gamma * vals[i + 1] - vals[i] for i in range(len(rews) - 1)]
-        adv = self.discount_rewards(delta, self.gamma * self.lam)
-
-        return adv
+        return self.discount_rewards(delta, self.gamma * self.lam)
 
     def generate_trajectory_samples(self) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
         """
@@ -344,13 +339,13 @@ class PPOLightning(pl.LightningModule):
                 self.state = torch.FloatTensor(self.env.reset())
 
             if epoch_end:
-                train_data = zip(
-                    self.batch_states, self.batch_actions, self.batch_logp, self.batch_qvals, self.batch_adv
+                yield from zip(
+                    self.batch_states,
+                    self.batch_actions,
+                    self.batch_logp,
+                    self.batch_qvals,
+                    self.batch_adv,
                 )
-
-                for state, action, logp_old, qval, adv in train_data:
-                    yield state, action, logp_old, qval, adv
-
                 self.batch_states.clear()
                 self.batch_actions.clear()
                 self.batch_adv.clear()
@@ -378,13 +373,11 @@ class PPOLightning(pl.LightningModule):
         logp = self.actor.get_log_prob(pi, action)
         ratio = torch.exp(logp - logp_old)
         clip_adv = torch.clamp(ratio, 1 - self.clip_ratio, 1 + self.clip_ratio) * adv
-        loss_actor = -(torch.min(ratio * adv, clip_adv)).mean()
-        return loss_actor
+        return -(torch.min(ratio * adv, clip_adv)).mean()
 
     def critic_loss(self, state, action, logp_old, qval, adv) -> torch.Tensor:
         value = self.critic(state)
-        loss_critic = (qval - value).pow(2).mean()
-        return loss_critic
+        return (qval - value).pow(2).mean()
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx, optimizer_idx):
         """
@@ -437,8 +430,7 @@ class PPOLightning(pl.LightningModule):
     def _dataloader(self) -> DataLoader:
         """Initialize the Replay Buffer dataset used for retrieving experiences"""
         dataset = ExperienceSourceDataset(self.generate_trajectory_samples)
-        dataloader = DataLoader(dataset=dataset, batch_size=self.batch_size)
-        return dataloader
+        return DataLoader(dataset=dataset, batch_size=self.batch_size)
 
     def train_dataloader(self) -> DataLoader:
         """Get train loader"""

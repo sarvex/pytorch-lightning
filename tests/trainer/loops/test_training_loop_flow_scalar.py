@@ -322,6 +322,8 @@ def test_training_step_no_return_when_even(tmpdir):
 def test_training_step_none_batches(tmpdir):
     """ Tests correctness when the train dataloader gives None for some steps. """
 
+
+
     class TestModel(BoringModel):
 
         def __init__(self):
@@ -330,15 +332,13 @@ def test_training_step_none_batches(tmpdir):
             self.counter = 0
 
         def collate_none_when_even(self, batch):
-            if self.counter % 2 == 0:
-                result = None
-            else:
-                result = default_collate(batch)
+            result = None if self.counter % 2 == 0 else default_collate(batch)
             self.counter += 1
             return result
 
         def train_dataloader(self):
             return DataLoader(RandomDataset(32, 64), collate_fn=self.collate_none_when_even)
+
 
     model = TestModel()
     trainer = Trainer(

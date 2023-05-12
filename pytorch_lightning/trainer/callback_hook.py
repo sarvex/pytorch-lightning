@@ -291,8 +291,7 @@ class TrainerCallbackHookMixin(ABC):
 
         current_callbacks_type = {type(cb) for cb in self.callbacks}
         saved_callbacks_type = set(callback_states.keys())
-        difference = saved_callbacks_type.difference(current_callbacks_type)
-        if difference:
+        if difference := saved_callbacks_type.difference(current_callbacks_type):
             rank_zero_warn(
                 "Be aware that when using ``resume_from_checkpoint``, "
                 "callbacks used to create the checkpoint need to be provided. "
@@ -300,8 +299,7 @@ class TrainerCallbackHookMixin(ABC):
             )
 
         for callback in self.callbacks:
-            state = callback_states.get(type(callback))
-            if state:
+            if state := callback_states.get(type(callback)):
                 state = deepcopy(state)
                 if self.__is_old_signature_on_load_checkpoint(callback.on_load_checkpoint):
                     rank_zero_deprecation(

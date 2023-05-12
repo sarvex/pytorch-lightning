@@ -58,9 +58,7 @@ class SyncBNModule(LightningModule):
         x, y = batch
 
         y_hat, _ = self(x, batch_idx)
-        loss = F.cross_entropy(y_hat, y)
-
-        return loss
+        return F.cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.linear.parameters(), lr=0.02)

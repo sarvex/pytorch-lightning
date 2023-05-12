@@ -35,7 +35,7 @@ from pytorch_lightning.utilities import (
 try:
     from horovod.common.util import nccl_built
     nccl_built()
-except (ImportError, ModuleNotFoundError, AttributeError):
+except (ImportError, AttributeError):
     _HOROVOD_NCCL_AVAILABLE = False
 finally:
     _HOROVOD_NCCL_AVAILABLE = True
@@ -51,27 +51,7 @@ class RunIf:
             assert arg1 > 0.0
     """
 
-    def __new__(
-        self,
-        *args,
-        min_gpus: int = 0,
-        min_torch: Optional[str] = None,
-        max_torch: Optional[str] = None,
-        min_python: Optional[str] = None,
-        quantization: bool = False,
-        amp_apex: bool = False,
-        amp_native: bool = False,
-        tpu: bool = False,
-        ipu: bool = False,
-        horovod: bool = False,
-        horovod_nccl: bool = False,
-        skip_windows: bool = False,
-        special: bool = False,
-        fairscale: bool = False,
-        fairscale_fully_sharded: bool = False,
-        deepspeed: bool = False,
-        **kwargs
-    ):
+    def __new__(cls, *args, min_gpus: int = 0, min_torch: Optional[str] = None, max_torch: Optional[str] = None, min_python: Optional[str] = None, quantization: bool = False, amp_apex: bool = False, amp_native: bool = False, tpu: bool = False, ipu: bool = False, horovod: bool = False, horovod_nccl: bool = False, skip_windows: bool = False, special: bool = False, fairscale: bool = False, fairscale_fully_sharded: bool = False, deepspeed: bool = False, **kwargs):
         """
         Args:
             args: native pytest.mark.skipif arguments
